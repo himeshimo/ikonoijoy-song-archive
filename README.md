@@ -6,17 +6,6 @@
 
 公開後: `https://himeshimo.github.io/ikonoijoy-song-archive/`
 
-## ローカル起動
-
-```bash
-cd /Users/r.hassy2nd/Documents/Codex/2026-05-04/files-mentioned-by-the-user-injdb
-python3 -m http.server 8080
-```
-
-ブラウザで:
-
-- `http://localhost:8080/index.html?view=home`
-
 ## 主要ルート
 
 - `?view=home` トップ
