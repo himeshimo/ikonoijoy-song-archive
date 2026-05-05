@@ -4,7 +4,7 @@
 
 ## 公開URL（GitHub Pages）
 
-公開後: `https://himeshimo.github.io/ikonoijoy-song-archive/`
+https://himeshimo.github.io/ikonoijoy-song-archive/
 
 ## 主要ルート
 
