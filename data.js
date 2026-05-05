@@ -999,7 +999,7 @@ const rawSongs = [
   },
   {
     "id": "love-058",
-    "title": "青春“サブリミナル”",
+    "title": "青春\"サブリミナル\"",
     "group": "love",
     "groupName": "=LOVE",
     "lyricists": [
@@ -5297,6 +5297,29 @@ const albumMembershipOverrides = {
   // joy-026 は主所属が ALBUM のため副所属には入れない
 };
 
+// 他グループのシングル収録情報（アルバム収録とは分離管理）
+const includedSinglesOverrides = {
+  "me-036": [{ title: "CAMEO", group: "love" }],
+  "me-006": [{ title: "青春\"サブリミナル\"", group: "love" }],
+  "joy-017": [{ title: "天使は何処へ <Special Edition>", group: "me" }],
+  "joy-008": [{ title: "想わせぶりっこ <Special Edition>", group: "me" }],
+  "joy-022": [{ title: "はにかみショート <Special Edition>", group: "me" }],
+};
+
+// 他作品（主に他グループのシングル）への収録情報
+const includedInOverrides = {
+  "me-036": [{ title: "CAMEO", group: "love" }],
+  "me-006": [{ title: "青春\"サブリミナル\"", group: "love" }],
+  "joy-017": [{ title: "天使は何処へ <Special Edition>", group: "me" }],
+  "joy-008": [{ title: "想わせぶりっこ <Special Edition>", group: "me" }],
+  "joy-022": [{ title: "はにかみショート <Special Edition>", group: "me" }],
+};
+
+// 公開形態（YouTube限定など）
+const distributionOverrides = {
+  "love-034": { distribution: "youtube", videoUrl: "https://youtu.be/93iIH0_e1QM?si=1Ven_SUJgLHgw336" },
+};
+
 const releaseCorrectionsById = {
   // ≠ME: 「超特急 ≠ME行き」に統合する正規収録曲
   "me-001": { releaseTitle: "超特急 ≠ME行き", releaseType: "ALBUM", releaseGroup: "me", group: "me" },
@@ -5359,6 +5382,37 @@ const songs = combinedRawSongs
     ...((Array.isArray(albumMembershipOverrides[song.id]) ? albumMembershipOverrides[song.id] : [])),
   ].map((value) => String(value || "").trim()).filter(Boolean);
 
+  const mergedIncludedSingles = [
+    ...(Array.isArray(song.includedSingles) ? song.includedSingles : []),
+    ...(Array.isArray(includedSinglesOverrides[song.id]) ? includedSinglesOverrides[song.id] : []),
+  ]
+    .map((entry) => {
+      if (typeof entry === "string") return { title: entry.trim(), group: mergedSongGroup };
+      const title = String(entry?.title || "").trim();
+      const group = String(entry?.group || mergedSongGroup).trim();
+      if (!title) return null;
+      return { title, group };
+    })
+    .filter(Boolean)
+    .filter((entry, index, list) => list.findIndex((item) => item.title === entry.title && item.group === entry.group) === index);
+
+  const mergedIncludedIn = [
+    ...(Array.isArray(song.includedIn) ? song.includedIn : []),
+    ...(Array.isArray(includedInOverrides[song.id]) ? includedInOverrides[song.id] : []),
+  ]
+    .map((entry) => {
+      if (typeof entry === "string") return { title: entry.trim(), group: mergedSongGroup };
+      const title = String(entry?.title || "").trim();
+      const group = String(entry?.group || mergedSongGroup).trim();
+      if (!title) return null;
+      return { title, group };
+    })
+    .filter(Boolean)
+    .filter((entry, index, list) => list.findIndex((item) => item.title === entry.title && item.group === entry.group) === index);
+  const distributionOverride = distributionOverrides[song.id] || null;
+  const distribution = distributionOverride?.distribution || song.distribution || "streaming";
+  const videoUrl = distributionOverride?.videoUrl || song.videoUrl || "";
+
   return {
     ...song,
     group: mergedSongGroup,
@@ -5369,6 +5423,10 @@ const songs = combinedRawSongs
     releaseDate: mergedReleaseDate,
     releaseEdition: song.releaseEdition || "",
     albums: [...new Set(mergedAlbums)],
+    includedSingles: mergedIncludedSingles,
+    includedIn: mergedIncludedIn,
+    distribution,
+    videoUrl,
     release: {
       ...(song.release || {}),
       title: hasCorrectionTitle ? correction.releaseTitle : (mergedReleaseTitle || song.release?.title || ""),

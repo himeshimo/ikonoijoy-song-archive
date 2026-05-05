@@ -94,6 +94,7 @@ a:hover { text-decoration: underline; }
   gap: 14px;
   color: var(--ink);
   text-decoration: none;
+  flex-shrink: 0;
 }
 .brand:hover { text-decoration: none; }
 
@@ -119,7 +120,7 @@ a:hover { text-decoration: underline; }
   line-height: 1;
 }
 
-.brand strong { display: block; font-size: 16px; font-weight: 900; line-height: 1.2; letter-spacing: -0.01em; }
+.brand strong { display: block; font-size: 16px; font-weight: 900; line-height: 1.2; letter-spacing: -0.01em; white-space: nowrap; }
 .brand small  { display: block; font-size: 11px; color: var(--ink-2); margin-top: 3px; letter-spacing: 0.04em; }
 
 .nav {
@@ -300,15 +301,30 @@ a:hover { text-decoration: underline; }
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px;
   margin-top: 14px;
+  align-items: stretch;
 }
 
 .group-intro-card {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   padding: 14px;
   background: var(--bg-2);
   border: 1px solid var(--border);
   border-radius: 10px;
+  min-height: 100%;
+}
+
+.group-intro-top {
+  display: grid;
+  gap: 8px;
+}
+
+.group-intro-bottom {
+  display: grid;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 6px;
 }
 
 .group-intro-card h3 {
@@ -342,6 +358,11 @@ a:hover { text-decoration: underline; }
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.group-intro-card .call-index-link {
+  margin-top: 6px;
+  justify-self: start;
 }
 
 /* ================================================================
@@ -696,16 +717,21 @@ h2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
+  align-items: stretch;
 }
 
 .release-card {
-  display: grid;
-  gap: 12px;
-  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
   background: var(--bg-2);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
+  align-self: stretch;
+  height: 100%;
+  min-height: 176px;
 }
 
 .release-card-head {
@@ -723,16 +749,64 @@ h2 {
 
 .release-card-meta,
 .release-card-count {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   font-size: 12px;
   color: var(--ink-3);
   overflow-wrap: anywhere;
+}
+
+.release-card-count {
+  font-weight: 900;
+  color: var(--ink-2);
+  letter-spacing: 0.01em;
+}
+
+.release-card-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.release-type {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+
+.release-type.youtube {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(127, 29, 29, 0.32);
+}
+
+.release-type.single {
+  color: var(--ink-2);
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.release-type.album {
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(30, 64, 175, 0.26);
 }
 
 .release-song-list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  align-content: flex-start;
+  margin-top: auto;
+  min-height: 64px;
+  max-height: 64px;
+  overflow: hidden;
+  padding-bottom: 6px;
 }
 
 .release-song-link {
@@ -745,8 +819,39 @@ h2 {
   border-radius: 999px;
   color: var(--ink-2);
   font-size: 12px;
+  line-height: 1.2;
   font-weight: 700;
   text-decoration: none;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.release-song-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0 9px;
+  margin-left: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px dashed rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.02);
+  color: var(--ink-3);
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 700;
+  opacity: 0.9;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.release-song-more.album {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.1);
+  color: #a7ceff;
 }
 
 .release-title-link {
@@ -1854,6 +1959,7 @@ a.mix-tag:hover {
   .site-header { flex-direction: column; align-items: flex-start; min-height: auto; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
   .nav { justify-content: flex-start; align-self: stretch; }
   .nav a { flex: 0 1 auto; }
+  .brand strong { white-space: normal; }
   .search-panel { grid-template-columns: 1fr; }
   .filters { flex-direction: row; flex-wrap: wrap; }
   .stats { grid-template-columns: repeat(3, 1fr); }
@@ -1884,9 +1990,11 @@ a.mix-tag:hover {
     line-height: 1.78;
     text-align: left;
   }
-  .release-card { padding: 14px; }
+  .release-card { padding: 14px; gap: 8px; }
   .release-card-head { gap: 8px; }
   .release-card h3 { font-size: 15px; }
+  .release-card { min-height: 0; }
+  .release-song-list { min-height: 0; max-height: none; overflow: visible; }
   .detail-basic-grid { grid-template-columns: 1fr; }
   .detail-release-link { width: 100%; justify-content: flex-start; border-radius: 10px; }
   .call-filter-panel { gap: 8px; }
@@ -1894,6 +2002,7 @@ a.mix-tag:hover {
   .call-filter-row .release-filters,
   .call-filter-row .release-view-switch { gap: 6px; }
   .creator-card { padding: 14px; }
+  .group-intro-bottom { padding-top: 2px; gap: 5px; }
   .stats { grid-template-columns: 1fr; }
   .section-head { flex-direction: column; align-items: flex-start; }
   .song-tools { align-items: flex-start; }

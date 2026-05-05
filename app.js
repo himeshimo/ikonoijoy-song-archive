@@ -298,16 +298,15 @@ function renderSongs() {
 function groupedReleases() {
   const releaseMap = new Map();
   const releaseSongIds = new Map();
-  const albumMetaByKey = new Map();
+  const releaseMetaByKey = new Map();
 
   songs.forEach((song) => {
     const title = song.release?.title || "";
     if (!title) return;
-    const type = String(song.release?.type || "").toUpperCase();
-    if (type !== "ALBUM") return;
     const key = `${song.releaseGroup || song.group}:${normalizeReleaseTitle(title)}`;
-    if (!albumMetaByKey.has(key)) {
-      albumMetaByKey.set(key, {
+    if (!releaseMetaByKey.has(key)) {
+      releaseMetaByKey.set(key, {
+        type: String(song.release?.type || "").toUpperCase(),
         date: song.release?.date || song.releaseDate || "",
       });
     }
@@ -335,7 +334,7 @@ function groupedReleases() {
       const releaseGroup = song.releaseGroup || song.group;
       const albumKey = `${releaseGroup}:${normalized}`;
       if (albumKey === key) return;
-      const albumMeta = albumMetaByKey.get(albumKey);
+      const releaseMeta = releaseMetaByKey.get(albumKey);
       const albumSong = {
         ...song,
         releaseTitle: albumTitle,
@@ -344,11 +343,35 @@ function groupedReleases() {
           ...(song.release || {}),
           title: albumTitle,
           type: "ALBUM",
-          date: albumMeta?.date || song.release?.date || song.releaseDate || "",
+          date: releaseMeta?.date || song.release?.date || song.releaseDate || "",
         },
         releaseGroup,
       };
       pushReleaseSong(albumKey, albumSong);
+    });
+
+    const includedInReleases = Array.isArray(song.includedIn) ? song.includedIn : [];
+    includedInReleases.forEach((entry) => {
+      const includedTitle = typeof entry === "string" ? entry : entry?.title;
+      const includedGroup = typeof entry === "string" ? (song.releaseGroup || song.group) : (entry?.group || song.releaseGroup || song.group);
+      const normalized = normalizeReleaseTitle(includedTitle || "");
+      if (!normalized) return;
+      const includedKey = `${includedGroup}:${normalized}`;
+      if (includedKey === key) return;
+      const releaseMeta = releaseMetaByKey.get(includedKey);
+      const includedSong = {
+        ...song,
+        releaseTitle: includedTitle,
+        releaseType: releaseMeta?.type || "SINGLE",
+        release: {
+          ...(song.release || {}),
+          title: includedTitle,
+          type: releaseMeta?.type || "SINGLE",
+          date: releaseMeta?.date || song.release?.date || song.releaseDate || "",
+        },
+        releaseGroup: includedGroup,
+      };
+      pushReleaseSong(includedKey, includedSong);
     });
   });
 
@@ -588,6 +611,13 @@ function renderReleases() {
   if (!releases.length) {
     releaseGrid.innerHTML = `<p class="empty">該当する作品がありません。</p>`;
   } else {
+    const releaseTypeDisplay = (head) => {
+      if (head.distribution === "youtube") return { label: "YOUTUBE", className: "youtube" };
+      const type = String(head.release?.type || "").toUpperCase();
+      if (type === "ALBUM") return { label: "ALBUM", className: "album" };
+      return { label: "SINGLE", className: "single" };
+    };
+
     const groupedByArtist = {
       love: releases.filter((r) => (r.songs[0].releaseGroup || r.songs[0].group) === "love"),
       me: releases.filter((r) => (r.songs[0].releaseGroup || r.songs[0].group) === "me"),
@@ -607,20 +637,31 @@ function renderReleases() {
             ${list
               .map(({ key, songs: releaseSongs }) => {
                 const head = releaseSongs[0];
+                const releaseTypeMeta = releaseTypeDisplay(head);
+                const releaseSongLimit = 5;
+                const hasOverflow = releaseSongs.length > releaseSongLimit;
+                const visibleSongs = hasOverflow
+                  ? releaseSongs.slice(0, Math.max(1, releaseSongLimit - 1))
+                  : releaseSongs.slice(0, releaseSongLimit);
+                const hiddenCount = Math.max(0, releaseSongs.length - visibleSongs.length);
                 return `
-                  <article class="release-card">
+                  <article class="release-card release-card--${releaseTypeMeta.className}">
                     <div class="release-card-head">
                       <div>
                         <a class="release-title-link" href="?release=${encodeURIComponent(key)}" data-release-key="${encodeURIComponent(key)}"><h3>${releaseTitle(head)}</h3></a>
-                        <p class="release-card-meta">${[head.release?.type, head.release?.date].filter(Boolean).join(" / ")}</p>
+                        <p class="release-card-meta">
+                          <span class="release-type ${releaseTypeMeta.className}">${releaseTypeMeta.label}</span>
+                          <span>${head.release?.date || "日付未登録"}</span>
+                        </p>
                       </div>
                       <span class="group-badge ${head.releaseGroup || head.group}">${groupLabels[head.releaseGroup || head.group]}</span>
                     </div>
                     <p class="release-card-count">${releaseSongs.length}曲収録</p>
                     <div class="release-song-list">
-                      ${releaseSongs
+                      ${visibleSongs
                         .map((song) => `<a class="release-song-link" href="?id=${song.id}" data-song-id="${song.id}">${song.title}</a>`)
                         .join("")}
+                      ${hiddenCount > 0 ? `<span class="release-song-more${releaseTypeMeta.className === "album" ? " album" : ""}">他${hiddenCount}曲</span>` : ""}
                     </div>
                   </article>
                 `;
@@ -1273,7 +1314,6 @@ function mountReleaseDetailView(routeKey) {
       </nav>
       <header class="detail-header">
         <div class="detail-release">
-          <span class="release-chip">${releaseTitle(head)}</span>
           <span class="release-meta">${[head.release?.type, head.release?.date].filter(Boolean).join(" / ") || "未登録"}</span>
         </div>
         <h1 class="detail-title">${releaseTitle(head)}</h1>
@@ -1380,7 +1420,6 @@ function renderCallSection(song) {
 
 function renderDetailHTML(song) {
   const hasMix = song.hasCall;
-  const releaseGroupKey = song.releaseGroup || song.group;
 
   // 同じクリエイターが関わる他の曲（作曲・編曲どちらか）
   const RELATED_CREATOR_EXCLUDES = new Set(["指原莉乃"]);
@@ -1395,6 +1434,22 @@ function renderDetailHTML(song) {
     ? songs.filter((s) => s.id !== song.id && releaseKey(s) === releaseKey(song))
     : [];
   const isSingleRelease = String(song.release?.type || "").toUpperCase() === "SINGLE";
+  const isYoutubeOnly = song.distribution === "youtube";
+  const releaseGroupKey = song.releaseGroup || song.group;
+  const singleTitles = [
+    ...(isSingleRelease && song.release?.title ? [{ title: song.release.title, group: releaseGroupKey }] : []),
+    ...(Array.isArray(song.includedSingles) ? song.includedSingles : []),
+  ]
+    .map((entry) => {
+      if (typeof entry === "string") return { title: entry.trim(), group: releaseGroupKey };
+      const title = String(entry?.title || "").trim();
+      const group = String(entry?.group || releaseGroupKey).trim();
+      if (!title) return null;
+      return { title, group };
+    })
+    .filter(Boolean)
+    .filter((entry, index, list) => list.findIndex((item) => item.title === entry.title && item.group === entry.group) === index);
+
   const albumTitles = [
     ...(Array.isArray(song.albums) ? song.albums : []),
     ...(!isSingleRelease && song.release?.title ? [song.release.title] : []),
@@ -1403,12 +1458,16 @@ function renderDetailHTML(song) {
     .filter(Boolean)
     .filter((title, index, list) => list.indexOf(title) === index);
 
-  const toReleaseLink = (title) => {
+  const toReleaseLink = (title, group = releaseGroupKey) => {
     const normalizedTitle = normalizeReleaseTitle(title);
     if (!normalizedTitle) return "未登録";
-    const key = encodeURIComponent(`${releaseGroupKey}:${normalizedTitle}`);
+    const key = encodeURIComponent(`${group}:${normalizedTitle}`);
     return `<a class="detail-release-link" href="?release=${key}" data-release-key="${key}">${title}</a>`;
   };
+
+  const singleLinks = singleTitles.length
+    ? singleTitles.map((entry) => toReleaseLink(entry.title, entry.group)).join(" ")
+    : "未登録";
 
   const albumLinks = albumTitles.length
     ? albumTitles.map((title) => toReleaseLink(title)).join(" ")
@@ -1417,7 +1476,14 @@ function renderDetailHTML(song) {
   const basicInfo = [
     { label: "グループ", value: groupLabels[song.group] },
     { label: "曲タイプ", value: songTypeLabel(song) },
-    ...(isSingleRelease ? [{ label: "シングル / 配信", value: song.release?.title ? toReleaseLink(song.release.title) : "未登録" }] : []),
+    ...(isYoutubeOnly
+      ? [{
+          label: "公開",
+          value: song.videoUrl
+            ? `<a class="detail-release-link" href="${song.videoUrl}" target="_blank" rel="noreferrer">YouTubeで見る</a>`
+            : "YouTube公開（URL未登録）",
+        }]
+      : (singleTitles.length ? [{ label: "シングル / 配信", value: singleLinks }] : [])),
     { label: "収録アルバム", value: albumLinks },
     { label: "リリース日", value: song.release?.date || "未登録" },
     { label: "コール", value: hasMix ? `${song.callNotes.length}件` : "未登録" },
