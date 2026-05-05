@@ -164,7 +164,7 @@ function releaseKey(song) {
 }
 
 function releaseTitle(song) {
-  return normalizeReleaseTitle(song.release?.title || "") || "リリース未登録";
+  return releaseDisplayTitle(song.release?.title || "") || "リリース未登録";
 }
 
 function releaseDate(song) {
@@ -214,9 +214,18 @@ function normalizeReleaseTitle(title) {
   return releaseTitleAliasMap[normalized] || normalized;
 }
 
+function releaseDisplayTitle(title) {
+  const normalized = normalizeReleaseTitle(title);
+  if (!normalized) return "";
+  const displayAliasMap = {
+    "青春サブリミナル": "青春\"サブリミナル\"",
+  };
+  return displayAliasMap[normalized] || normalized;
+}
+
 function makeSongCard(song) {
   const hasMix = song.hasCall;
-  const release = song.release?.title || "リリース未登録";
+  const release = releaseDisplayTitle(song.release?.title || "") || "リリース未登録";
   const releaseSub = song.release ? [song.release.date].filter(Boolean).join(" / ") : "";
   const cardClass = `song-card${hasMix ? " song-card--has-mix" : ""}`;
   const callRow = hasMix
@@ -406,7 +415,7 @@ function searchSongs(query, groupFilter = "all") {
         song.title,
         song.groupName,
         groupLabels[song.group],
-        song.release?.title || "",
+        releaseDisplayTitle(song.release?.title || "") || "",
         normalizeReleaseTitle(song.release?.title || ""),
         ...(Array.isArray(song.albums) ? song.albums : []),
         ...(Array.isArray(song.searchAliases) ? song.searchAliases : []),
@@ -441,7 +450,7 @@ function renderSongSearchCards(targetId, countId, query, groupFilter = "all") {
           <a class="song-card-title-link" href="?id=${song.id}" data-song-id="${song.id}"><h3>${song.title}</h3></a>
           <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
         </div>
-        <p class="song-search-meta">${song.release?.title || song.releaseTitle || "作品未登録"} / ${song.release?.date || song.releaseDate || "日付未登録"}</p>
+        <p class="song-search-meta">${releaseDisplayTitle(song.release?.title || song.releaseTitle || "") || "作品未登録"} / ${song.release?.date || song.releaseDate || "日付未登録"}</p>
         <div class="song-search-badges">
           <span class="tag">${song.songType === "all" ? "イコノイジョイ" : songTypeLabel(song)}</span>
           ${song.performer && song.songType !== "solo" && song.songType !== "all" ? `<span class="tag">${song.performer}</span>` : ""}
@@ -564,7 +573,7 @@ function renderReleases() {
               <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
               <h3>${song.title}</h3>
             </div>
-            <p class="call-index-meta">${song.release?.title || "作品未登録"}</p>
+            <p class="call-index-meta">${releaseDisplayTitle(song.release?.title || "") || "作品未登録"}</p>
             <div class="tag-row">${song.callNotes.map((note) => `<span class="tag">${note.name}</span>`).join("")}</div>
             <a class="call-index-link" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">コールを見る</a>
           </article>
@@ -907,7 +916,7 @@ function renderMixes() {
             <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
             <h3>${song.title}</h3>
           </div>
-          <p class="call-index-meta">${song.release?.title || "作品未登録"}</p>
+          <p class="call-index-meta">${releaseDisplayTitle(song.release?.title || "") || "作品未登録"}</p>
           <p class="call-index-meta">${levels || "難易度未設定"}</p>
           <div class="tag-row">${mixTags}</div>
           <a class="call-index-link" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">コールを見る</a>
@@ -1284,6 +1293,12 @@ function mountReleaseDetailView(routeKey) {
         const [g, t] = item.key.split(":");
         return g === legacyGroup && t === legacyTitle;
       });
+    } else {
+      const legacyTitleOnly = normalizeReleaseTitle(decodedKey || "");
+      target = groupedReleases().find((item) => {
+        const [, t] = item.key.split(":");
+        return t === legacyTitleOnly;
+      });
     }
   }
   if (!target) {
@@ -1462,7 +1477,7 @@ function renderDetailHTML(song) {
     const normalizedTitle = normalizeReleaseTitle(title);
     if (!normalizedTitle) return "未登録";
     const key = encodeURIComponent(`${group}:${normalizedTitle}`);
-    return `<a class="detail-release-link" href="?release=${key}" data-release-key="${key}">${title}</a>`;
+    return `<a class="detail-release-link detail-release-link--${group}" href="?release=${key}" data-release-key="${key}">${releaseDisplayTitle(title) || title}</a>`;
   };
 
   const singleLinks = singleTitles.length
@@ -1471,22 +1486,25 @@ function renderDetailHTML(song) {
 
   const albumLinks = albumTitles.length
     ? albumTitles.map((title) => toReleaseLink(title)).join(" ")
-    : "未登録";
+    : "未収録";
 
-  const basicInfo = [
+  const basicInfoTop = [
     { label: "グループ", value: groupLabels[song.group] },
     { label: "曲タイプ", value: songTypeLabel(song) },
+    { label: "リリース日", value: song.release?.date || "未登録" },
+    { label: "コール", value: hasMix ? `${song.callNotes.length}件` : "未登録" },
+  ];
+
+  const basicInfoLinks = [
     ...(isYoutubeOnly
       ? [{
           label: "公開",
           value: song.videoUrl
-            ? `<a class="detail-release-link" href="${song.videoUrl}" target="_blank" rel="noreferrer">YouTubeで見る</a>`
+            ? `<a class="detail-release-link detail-release-link--${releaseGroupKey}" href="${song.videoUrl}" target="_blank" rel="noreferrer">YouTubeで見る</a>`
             : "YouTube公開（URL未登録）",
         }]
       : (singleTitles.length ? [{ label: "シングル / 配信", value: singleLinks }] : [])),
     { label: "収録アルバム", value: albumLinks },
-    { label: "リリース日", value: song.release?.date || "未登録" },
-    { label: "コール", value: hasMix ? `${song.callNotes.length}件` : "未登録" },
   ];
 
   return `
@@ -1505,9 +1523,17 @@ function renderDetailHTML(song) {
 
       <section class="detail-basic">
         <h2>基本情報</h2>
-        <dl class="detail-basic-grid">
-          ${basicInfo.map((item) => `
-            <div>
+        <dl class="detail-basic-grid detail-basic-grid--top">
+          ${basicInfoTop.map((item) => `
+            <div class="detail-basic-item">
+              <dt>${item.label}</dt>
+              <dd>${item.value}</dd>
+            </div>
+          `).join("")}
+        </dl>
+        <dl class="detail-basic-grid detail-basic-grid--links">
+          ${basicInfoLinks.map((item) => `
+            <div class="detail-basic-item detail-basic-item--link">
               <dt>${item.label}</dt>
               <dd>${item.value}</dd>
             </div>

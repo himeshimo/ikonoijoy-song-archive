@@ -2494,7 +2494,9 @@ const rawSongs = [
     "composers": [
       "yuma"
     ],
-    "arrangers": [],
+    "arrangers": [
+      "yuma"
+    ],
     "mixes": [],
     "sources": {
       "credits": "https://www.uta-net.com/artist/27489/"

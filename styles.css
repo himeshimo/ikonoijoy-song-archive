@@ -1686,12 +1686,19 @@ a.mix-tag:hover {
 
 .detail-basic-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
   margin: 14px 0 0;
 }
 
-.detail-basic-grid div {
+.detail-basic-grid--top {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.detail-basic-grid--links {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-basic-item {
   padding: 14px;
   background: var(--bg-2);
   border: 1px solid var(--border);
@@ -1712,6 +1719,18 @@ a.mix-tag:hover {
   color: var(--ink);
 }
 
+.detail-basic-item--link dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px 0;
+}
+
+@media (max-width: 860px) {
+  .detail-basic-grid--top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .detail-basic-grid--links { grid-template-columns: 1fr; }
+}
+
 .detail-release-link {
   display: inline-flex;
   align-items: center;
@@ -1729,9 +1748,29 @@ a.mix-tag:hover {
 }
 
 .detail-release-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--ink);
+}
+
+.detail-release-link--love:hover {
   border-color: var(--pink);
   background: var(--pink-dim);
-  color: var(--ink);
+}
+
+.detail-release-link--me:hover {
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+
+.detail-release-link--joy:hover {
+  border-color: var(--yellow);
+  background: var(--yellow-dim);
+}
+
+.detail-release-link--all:hover {
+  border-color: var(--border-2);
+  background: rgba(255,255,255,0.06);
 }
 
 /* ---- コールセクション ---- */
@@ -1995,7 +2034,8 @@ a.mix-tag:hover {
   .release-card h3 { font-size: 15px; }
   .release-card { min-height: 0; }
   .release-song-list { min-height: 0; max-height: none; overflow: visible; }
-  .detail-basic-grid { grid-template-columns: 1fr; }
+  .detail-basic-grid--top,
+  .detail-basic-grid--links { grid-template-columns: 1fr; }
   .detail-release-link { width: 100%; justify-content: flex-start; border-radius: 10px; }
   .call-filter-panel { gap: 8px; }
   .call-filter-row { gap: 4px; }
