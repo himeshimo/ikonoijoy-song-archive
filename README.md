@@ -34,3 +34,6 @@ python3 -m http.server 8080
 - `styles.css` UI（ダークテーマ）
 - `data.js` 楽曲データ
 - `normalized_catalog.csv` 正規化済みCSV
+
+## 注意
+- `まだ制作段階のため、情報の正確性に欠ける部分があります。あらかじめご了承ください。
