@@ -203,16 +203,19 @@
             </div>
           </div>
           <div class="call-filter-row">
-            <p class="eyebrow">表示</p>
-            <div class="view-switch release-view-switch" role="group" aria-label="コール表示切替">
-              <button class="view-button active" data-call-view="group" type="button">グループ別</button>
-              <button class="view-button" data-call-view="level" type="button">難易度別</button>
+            <p class="eyebrow">難易度</p>
+            <div class="filters release-filters" role="group" aria-label="難易度で絞り込み">
+              <button class="filter-button active" data-call-level="all" type="button">すべて</button>
+              <button class="filter-button" data-call-level="公式" type="button">公式</button>
+              <button class="filter-button" data-call-level="中級" type="button">中級</button>
+              <button class="filter-button" data-call-level="上級" type="button">上級</button>
             </div>
           </div>
           <div class="call-filter-row">
             <p class="eyebrow">絞り込み</p>
             <div class="filters release-filters call-quick-filters" role="group" aria-label="コール補助フィルター">
               <button class="filter-button" data-call-beginner-only="true" type="button">初心者向け</button>
+              <button class="filter-button" data-call-mix-only="true" type="button">MIXあり</button>
             </div>
           </div>
         </div>
@@ -226,14 +229,7 @@
           <p class="mixes-lead">よく使われるMIX/コール種別から、該当する楽曲を探せます。</p>
           <div id="callPatternList" class="call-pattern-list"></div>
         </section>
-        <p class="mixes-lead">コールが登録されている曲の一覧です。曲名をタップするとコール詳細に移動します。</p>
         <p id="callResultCount" class="result-count"></p>
-        <div id="mixList" class="mix-list"></div>
-        <div class="creator-more-row">
-          <button class="creator-more" type="button" data-call-more>さらに表示</button>
-          <button class="creator-more" type="button" data-call-all>全件表示</button>
-          <button class="creator-more" type="button" data-call-reset>表示を減らす</button>
-        </div>
       </section>
     </main>
 

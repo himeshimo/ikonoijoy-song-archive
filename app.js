@@ -224,9 +224,9 @@ const state = {
   creatorLimit: 8,
   callQuery: "",
   callGroupFilter: "all",
-  callViewMode: "group",
+  callLevelFilter: "all",
   callBeginnerOnly: false,
-  callLimit: 24,
+  callMixOnly: false,
   page: "home",
 };
 
@@ -958,11 +958,10 @@ function renderCreators() {
 }
 
 function renderMixes() {
-  const mixList = document.querySelector("#mixList");
-  if (!mixList) return;
   const callPatternList = document.querySelector("#callPatternList");
+  if (!callPatternList) return;
 
-  const baseSongs = songs
+  const callSongs = songs
     .filter((s) => s.hasCall)
     .filter((song) => {
       const groupOk =
@@ -983,118 +982,66 @@ function renderMixes() {
           ...song.callNotes.map((n) => n.body || ""),
         ].join(" ")
       );
-      return hay.includes(q);
-    });
+      if (!hay.includes(q)) return false;
 
-  // MIXが登録されている曲をすべて収集（song.idベース）
-  const callSongs = baseSongs
-    .filter((song) => {
-      if (state.callBeginnerOnly) {
-        const levels = song.callNotes.map((n) => n.level).filter(Boolean);
-        if (!(levels.length > 0 && levels.every((lv) => lv !== "上級"))) return false;
-      }
+      const levels = song.callNotes.map((n) => n.level).filter(Boolean);
+      if (state.callLevelFilter !== "all" && !levels.includes(state.callLevelFilter)) return false;
+      if (state.callBeginnerOnly && !(levels.length > 0 && levels.every((lv) => lv !== "上級"))) return false;
+      if (state.callMixOnly && !(Array.isArray(song.mixes) && song.mixes.length > 0)) return false;
       return true;
     })
     .sort((a, b) => {
-      const groupRank = { love: 0, me: 1, joy: 2 };
+      const groupRank = { love: 0, me: 1, joy: 2, all: 3 };
       return groupRank[a.group] - groupRank[b.group] || a.title.localeCompare(b.title, "ja");
     });
 
-  if (callPatternList) {
-    const patternMap = new Map();
-    callSongs.forEach((song) => {
-      const labels = new Set([
-        ...song.mixes.filter(Boolean),
-        ...song.callNotes.map((note) => (note?.name || "").trim()).filter(Boolean),
-      ]);
-      labels.forEach((label) => {
-        if (!patternMap.has(label)) patternMap.set(label, []);
-        patternMap.get(label).push(song);
-      });
+  const patternMap = new Map();
+  callSongs.forEach((song) => {
+    const labels = new Set([
+      ...song.mixes.filter(Boolean),
+      ...song.callNotes.map((note) => (note?.name || "").trim()).filter(Boolean),
+    ]);
+    labels.forEach((label) => {
+      if (!patternMap.has(label)) patternMap.set(label, []);
+      patternMap.get(label).push(song);
     });
+  });
 
-    const patternEntries = [...patternMap.entries()]
-      .map(([label, list]) => ({
-        label,
-        songs: list.filter((song, idx, arr) => arr.findIndex((s) => s.id === song.id) === idx),
-      }))
-      .filter((item) => item.songs.length > 0)
-      .sort((a, b) => b.songs.length - a.songs.length || a.label.localeCompare(b.label, "ja"))
-      .slice(0, 10);
+  const patternEntries = [...patternMap.entries()]
+    .map(([label, list]) => ({
+      label,
+      songs: list.filter((song, idx, arr) => arr.findIndex((s) => s.id === song.id) === idx),
+    }))
+    .filter((item) => item.songs.length > 0)
+    .sort((a, b) => b.songs.length - a.songs.length || a.label.localeCompare(b.label, "ja"))
+    .slice(0, 10);
 
-    callPatternList.innerHTML = patternEntries.length
-      ? patternEntries
-        .map((item) => `
-          <article class="call-pattern-card">
-            <div class="call-pattern-head">
-              <span class="tag">${item.label}</span>
-              <span class="call-pattern-count">${item.songs.length}曲</span>
-            </div>
-            <div class="call-pattern-songs">
-              ${item.songs.slice(0, 6).map((song) => `
-                <a class="call-pattern-song" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">
-                  <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
-                  <span>${song.title}</span>
-                </a>
-              `).join("")}
-              ${item.songs.length > 6 ? `<span class="call-pattern-more">ほか${item.songs.length - 6}曲</span>` : ""}
-            </div>
-          </article>
-        `)
-        .join("")
-      : `<p class="empty">現在の条件では、表示できるMIX/コール種別がありません。</p>`;
-  }
+  callPatternList.innerHTML = patternEntries.length
+    ? patternEntries
+      .map((item) => `
+        <article class="call-pattern-card">
+          <div class="call-pattern-head">
+            <span class="tag">${item.label}</span>
+            <span class="call-pattern-count">${item.songs.length}曲</span>
+          </div>
+          <div class="call-pattern-songs">
+            ${item.songs.slice(0, 8).map((song) => `
+              <a class="call-pattern-song" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">
+                <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
+                <span>${song.title}</span>
+              </a>
+            `).join("")}
+            ${item.songs.length > 8 ? `<span class="call-pattern-more">ほか${item.songs.length - 8}曲</span>` : ""}
+          </div>
+        </article>
+      `)
+      .join("")
+    : `<p class="empty">現在の条件に合うコール/MIX種別はありません。</p>`;
 
   const mixCount = document.querySelector("#mixCount");
-  if (mixCount) mixCount.textContent = baseSongs.length;
+  if (mixCount) mixCount.textContent = callSongs.length;
   const callResultCount = document.querySelector("#callResultCount");
-  if (callResultCount) callResultCount.textContent = `表示中 ${Math.min(state.callLimit, callSongs.length)} / ${baseSongs.length}曲`;
-
-  const visible = callSongs.slice(0, state.callLimit);
-  const renderCard = (song) => {
-      const mixTags = song.callNotes.map((note) => {
-        const level = note.level ?? "";
-        return `<span class="tag level-tag-${level}">${level ? `<span class="tag-level-dot level-dot-${level}"></span>` : ""}${note.name}</span>`;
-      }).join("");
-      const levels = [...new Set(song.callNotes.map((note) => note.level).filter(Boolean))].join(" / ");
-      return `
-        <article class="call-index-card">
-          <div class="call-index-top">
-            <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
-            <h3>${song.title}</h3>
-          </div>
-          ${releaseDisplayTitle(song.release?.title || "") ? `<p class="call-index-meta">${releaseDisplayTitle(song.release?.title || "")}</p>` : ""}
-          ${levels ? `<p class="call-index-meta">${levels}</p>` : ""}
-          ${mixTags ? `<div class="tag-row">${mixTags}</div>` : ""}
-          <a class="call-index-link" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">コールを見る</a>
-        </article>
-      `;
-    };
-
-  if (!visible.length) {
-    mixList.innerHTML = `<p class="empty">該当するコール曲がありません。</p>`;
-    return;
-  }
-
-  if (state.callViewMode === "group") {
-    const groupOrder = ["love", "me", "joy", "all"];
-    mixList.innerHTML = groupOrder
-      .map((group) => {
-        const list = visible.filter((s) => s.group === group);
-        if (!list.length) return "";
-        return `<section class="release-group-block"><header class="release-group-head"><h3>${groupLabels[group]}</h3><p>${list.length}曲</p></header><div class="release-group-grid">${list.map(renderCard).join("")}</div></section>`;
-      })
-      .join("");
-  } else if (state.callViewMode === "level") {
-    const levelOrder = ["公式", "中級", "上級"];
-    mixList.innerHTML = levelOrder
-      .map((lv) => {
-        const list = visible.filter((s) => s.callNotes.some((n) => n.level === lv));
-        if (!list.length) return "";
-        return `<section class="release-group-block"><header class="release-group-head"><h3>${lv}</h3><p>${list.length}曲</p></header><div class="release-group-grid">${list.map(renderCard).join("")}</div></section>`;
-      })
-      .join("");
-  }
+  if (callResultCount) callResultCount.textContent = `表示中 ${callSongs.length}曲（種別カード 最大10件）`;
 }
 
 function renderStats() {
@@ -1267,7 +1214,6 @@ function bindListEvents() {
     callSearchInput.value = state.callQuery;
     callSearchInput.addEventListener("input", (event) => {
       state.callQuery = event.target.value;
-      state.callLimit = 24;
       renderMixes();
     });
   }
@@ -1277,17 +1223,16 @@ function bindListEvents() {
       document.querySelectorAll("[data-call-group]").forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
       state.callGroupFilter = button.dataset.callGroup;
-      state.callLimit = 24;
       renderMixes();
     });
   });
 
-  document.querySelectorAll("[data-call-view]").forEach((button) => {
+  document.querySelectorAll("[data-call-level]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.callLevel === state.callLevelFilter);
     button.addEventListener("click", () => {
-      document.querySelectorAll("[data-call-view]").forEach((item) => item.classList.remove("active"));
+      document.querySelectorAll("[data-call-level]").forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
-      state.callViewMode = button.dataset.callView;
-      state.callLimit = 24;
+      state.callLevelFilter = button.dataset.callLevel;
       renderMixes();
     });
   });
@@ -1297,7 +1242,15 @@ function bindListEvents() {
     button.addEventListener("click", () => {
       state.callBeginnerOnly = !state.callBeginnerOnly;
       button.classList.toggle("active", state.callBeginnerOnly);
-      state.callLimit = 24;
+      renderMixes();
+    });
+  });
+
+  document.querySelectorAll("[data-call-mix-only]").forEach((button) => {
+    button.classList.toggle("active", state.callMixOnly);
+    button.addEventListener("click", () => {
+      state.callMixOnly = !state.callMixOnly;
+      button.classList.toggle("active", state.callMixOnly);
       renderMixes();
     });
   });
@@ -1371,20 +1324,6 @@ function bindListEvents() {
       return;
     }
 
-    if (event.target.closest("[data-call-more]")) {
-      state.callLimit += 24;
-      renderMixes();
-      return;
-    }
-    if (event.target.closest("[data-call-all]")) {
-      state.callLimit = Number.MAX_SAFE_INTEGER;
-      renderMixes();
-      return;
-    }
-    if (event.target.closest("[data-call-reset]")) {
-      state.callLimit = 24;
-      renderMixes();
-    }
   };
   mainEl.addEventListener("click", listMainClickHandler);
 
