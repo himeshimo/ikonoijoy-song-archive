@@ -86,24 +86,67 @@ function buildNavState(extra = {}) {
   };
 }
 
+const INTERNAL_HISTORY_KEY = "ikonoijoy:internalHistoryStack";
+
+function currentInternalUrl() {
+  return `${location.pathname}${location.search}${location.hash || ""}`;
+}
+
+function readInternalHistoryStack() {
+  try {
+    const raw = sessionStorage.getItem(INTERNAL_HISTORY_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeInternalHistoryStack(stack) {
+  sessionStorage.setItem(INTERNAL_HISTORY_KEY, JSON.stringify(stack.slice(-80)));
+}
+
+function recordInternalPreviousUrl(url) {
+  if (!url) return;
+  const stack = readInternalHistoryStack();
+  if (stack[stack.length - 1] !== url) stack.push(url);
+  writeInternalHistoryStack(stack);
+}
+
+function popPreviousInternalUrl() {
+  const now = currentInternalUrl();
+  const stack = readInternalHistoryStack();
+  while (stack.length) {
+    const candidate = stack.pop();
+    if (!candidate || candidate === now) continue;
+    writeInternalHistoryStack(stack);
+    return candidate;
+  }
+  writeInternalHistoryStack(stack);
+  return "";
+}
+
+function pushInternalRoute(url, stateExtra = {}, { recordPrevious = true } = {}) {
+  if (recordPrevious) recordInternalPreviousUrl(currentInternalUrl());
+  history.pushState(buildNavState(stateExtra), "", url);
+  dispatch();
+}
+
 function navigate(id) {
   const url = id ? `?id=${id}` : location.pathname;
-  history.pushState(buildNavState({ id }), "", url);
-  dispatch();
+  pushInternalRoute(url, { id });
 }
 
 function navigateView(view) {
   const params = new URLSearchParams();
   params.set("view", view);
   if (state.releaseQuery) params.set("q", state.releaseQuery);
-  history.pushState(buildNavState({ view }), "", `?${params.toString()}`);
-  dispatch();
+  pushInternalRoute(`?${params.toString()}`, { view });
 }
 
 function navigateWithHash(id, hash) {
   const url = id ? `?id=${id}${hash ? "#" + hash : ""}` : location.pathname;
-  history.pushState(buildNavState({ id, hash }), "", url);
-  dispatch();
+  pushInternalRoute(url, { id, hash });
 }
 
 function syncRouteScroll() {
@@ -119,10 +162,6 @@ function syncRouteScroll() {
   requestAnimationFrame(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
   });
-}
-
-function canUseAppHistoryBack() {
-  return !!(history.length > 1 && history.state);
 }
 
 function ensureHistoryState() {
@@ -1128,8 +1167,7 @@ function bindListEvents() {
         event.preventDefault();
         state.releaseQuery = state.songQuery;
         const q = encodeURIComponent(state.songQuery || "");
-        history.pushState(buildNavState({ view: "releases", q: state.songQuery }), "", `?view=releases${q ? `&q=${q}` : ""}`);
-        dispatch();
+        pushInternalRoute(`?view=releases${q ? `&q=${q}` : ""}`, { view: "releases", q: state.songQuery });
       }
     });
   }
@@ -1166,8 +1204,7 @@ function bindListEvents() {
       else params.delete("group");
       if (state.releaseQuery) params.set("q", state.releaseQuery);
       else params.delete("q");
-      history.pushState(buildNavState({ view: "releases", group: state.releaseGroupFilter, q: state.releaseQuery }), "", `?${params.toString()}`);
-      renderReleases();
+      pushInternalRoute(`?${params.toString()}`, { view: "releases", group: state.releaseGroupFilter, q: state.releaseQuery });
     });
   });
 
@@ -1183,8 +1220,7 @@ function bindListEvents() {
       params.delete("group");
       if (state.releaseQuery) params.set("q", state.releaseQuery);
       else params.delete("q");
-      history.pushState(buildNavState({ view: "releases", group: "all", q: state.releaseQuery }), "", `?${params.toString()}`);
-      renderReleases();
+      pushInternalRoute(`?${params.toString()}`, { view: "releases", group: "all", q: state.releaseQuery });
     });
   }
 
@@ -1260,8 +1296,7 @@ function bindListEvents() {
         targetParams.has("release") ||
         targetParams.has("id");
       if (hasExtraParams) {
-        history.pushState(buildNavState({}), "", `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
-        dispatch();
+        pushInternalRoute(`${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`, {});
       } else {
         navigateView(viewLink.dataset.viewLink);
       }
@@ -1284,8 +1319,7 @@ function bindListEvents() {
     const releaseLink = event.target.closest("[data-release-key]");
     if (releaseLink) {
       event.preventDefault();
-      history.pushState(buildNavState({ release: releaseLink.dataset.releaseKey }), "", `?release=${releaseLink.dataset.releaseKey}`);
-      dispatch();
+      pushInternalRoute(`?release=${releaseLink.dataset.releaseKey}`, { release: releaseLink.dataset.releaseKey });
       return;
     }
 
@@ -1772,21 +1806,20 @@ function bindDetailEvents(currentSong) {
     const releaseLink = event.target.closest("[data-release-key]");
     if (releaseLink) {
       event.preventDefault();
-      history.pushState(buildNavState({ release: releaseLink.dataset.releaseKey }), "", `?release=${releaseLink.dataset.releaseKey}`);
-      dispatch();
+      pushInternalRoute(`?release=${releaseLink.dataset.releaseKey}`, { release: releaseLink.dataset.releaseKey });
       return;
     }
 
     // 一覧に戻る
     if (event.target.closest("[data-back]")) {
       event.preventDefault();
-      if (canUseAppHistoryBack()) {
-        history.back();
+      const previousInternalUrl = popPreviousInternalUrl();
+      if (previousInternalUrl) {
+        pushInternalRoute(previousInternalUrl, {}, { recordPrevious: false });
       } else if (history.state?.fromRelease) {
-        history.pushState(buildNavState({ release: history.state.fromRelease }), "", `?release=${history.state.fromRelease}`);
-        dispatch();
+        pushInternalRoute(`?release=${history.state.fromRelease}`, { release: history.state.fromRelease }, { recordPrevious: false });
       } else {
-        navigateView("releases");
+        pushInternalRoute("?view=releases", { view: "releases" }, { recordPrevious: false });
       }
       return;
     }
