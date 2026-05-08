@@ -689,6 +689,31 @@ h2 {
   gap: 10px;
 }
 
+.call-beginner-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.call-beginner-song {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.call-beginner-song:hover {
+  border-color: var(--border-2);
+  text-decoration: none;
+}
+
 .call-pattern-card {
   display: grid;
   gap: 8px;

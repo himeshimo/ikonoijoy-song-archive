@@ -1016,7 +1016,8 @@ function renderCreators() {
 
 function renderMixes() {
   const callPatternList = document.querySelector("#callPatternList");
-  if (!callPatternList) return;
+  const callBeginnerList = document.querySelector("#callBeginnerList");
+  if (!callPatternList || !callBeginnerList) return;
 
   const songsWithCallData = songs.filter((song) => hasCallData(song));
 
@@ -1093,6 +1094,35 @@ function renderMixes() {
       `)
       .join("")
     : `<p class="empty">現在の条件に合うコール/MIX種別はありません。</p>`;
+
+  const beginnerSongs = callSongs
+    .filter((song) => {
+      const levels = (Array.isArray(song.callNotes) ? song.callNotes : []).map((n) => n.level).filter(Boolean);
+      return levels.length > 0 && levels.every((lv) => lv !== "上級");
+    })
+    .sort((a, b) => {
+      const levelWeight = (song) => {
+        const levels = (Array.isArray(song.callNotes) ? song.callNotes : []).map((n) => n.level).filter(Boolean);
+        if (levels.includes("公式")) return 0;
+        if (levels.includes("中級")) return 1;
+        return 2;
+      };
+      const lw = levelWeight(a) - levelWeight(b);
+      if (lw) return lw;
+      return (b.release?.date || "").localeCompare(a.release?.date || "") || a.title.localeCompare(b.title, "ja");
+    })
+    .slice(0, 8);
+
+  callBeginnerList.innerHTML = beginnerSongs.length
+    ? beginnerSongs
+      .map((song) => `
+        <a class="call-beginner-song" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">
+          <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
+          <span>${song.title}</span>
+        </a>
+      `)
+      .join("")
+    : `<p class="empty">初心者向けとして表示できる曲はまだ少ないため、下の種別カードから探してください。</p>`;
 
   const mixCount = document.querySelector("#mixCount");
   if (mixCount) mixCount.textContent = callSongs.length;
