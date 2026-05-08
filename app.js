@@ -88,6 +88,7 @@ function buildNavState(extra = {}) {
 
 const INTERNAL_HISTORY_KEY = "ikonoijoy:internalHistoryStack";
 const HISTORY_DEBUG = true;
+const DEBUG_CALLS = false;
 let listMainClickHandler = null;
 let releaseDetailMainClickHandler = null;
 let detailMainClickHandler = null;
@@ -1059,16 +1060,18 @@ function renderMixes() {
 
   const cardSongIds = new Set(patternEntries.flatMap((entry) => entry.songs.map((song) => song.id)));
   const leakedSongs = callSongs.filter((song) => !cardSongIds.has(song.id));
-  console.info("[calls coverage]", {
-    hasCallTrueCount,
-    callNotesCount,
-    mixesCount,
-    textCallCount,
-    callTargetCount: songsWithCallData.length,
-    displayedSongCount: callSongs.length,
-    patternCount: patternEntries.length,
-    leakedSongIds: leakedSongs.map((song) => song.id),
-  });
+  if (DEBUG_CALLS) {
+    console.info("[calls coverage]", {
+      hasCallTrueCount,
+      callNotesCount,
+      mixesCount,
+      textCallCount,
+      callTargetCount: songsWithCallData.length,
+      displayedSongCount: callSongs.length,
+      patternCount: patternEntries.length,
+      leakedSongIds: leakedSongs.map((song) => song.id),
+    });
+  }
 }
 
 function renderStats() {
