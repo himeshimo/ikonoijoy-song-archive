@@ -122,7 +122,19 @@ function syncRouteScroll() {
 }
 
 function canUseAppHistoryBack() {
-  return !!(history.length > 1 && history.state && history.state.appNav);
+  return !!(history.length > 1 && history.state);
+}
+
+function ensureHistoryState() {
+  if (history.state) return;
+  const params = new URLSearchParams(location.search);
+  const initialState = buildNavState({
+    id: params.get("id") || "",
+    release: params.get("release") || "",
+    view: params.get("view") || getRouteView(),
+    hash: location.hash || "",
+  });
+  history.replaceState(initialState, "", `${location.pathname}${location.search}${location.hash || ""}`);
 }
 
 function dispatch() {
@@ -1116,7 +1128,7 @@ function bindListEvents() {
         event.preventDefault();
         state.releaseQuery = state.songQuery;
         const q = encodeURIComponent(state.songQuery || "");
-        history.pushState({ view: "releases", q: state.songQuery }, "", `?view=releases${q ? `&q=${q}` : ""}`);
+        history.pushState(buildNavState({ view: "releases", q: state.songQuery }), "", `?view=releases${q ? `&q=${q}` : ""}`);
         dispatch();
       }
     });
@@ -1154,7 +1166,7 @@ function bindListEvents() {
       else params.delete("group");
       if (state.releaseQuery) params.set("q", state.releaseQuery);
       else params.delete("q");
-      history.pushState({ view: "releases", group: state.releaseGroupFilter, q: state.releaseQuery }, "", `?${params.toString()}`);
+      history.pushState(buildNavState({ view: "releases", group: state.releaseGroupFilter, q: state.releaseQuery }), "", `?${params.toString()}`);
       renderReleases();
     });
   });
@@ -1171,7 +1183,7 @@ function bindListEvents() {
       params.delete("group");
       if (state.releaseQuery) params.set("q", state.releaseQuery);
       else params.delete("q");
-      history.pushState({ view: "releases", group: "all", q: state.releaseQuery }, "", `?${params.toString()}`);
+      history.pushState(buildNavState({ view: "releases", group: "all", q: state.releaseQuery }), "", `?${params.toString()}`);
       renderReleases();
     });
   }
@@ -1248,7 +1260,7 @@ function bindListEvents() {
         targetParams.has("release") ||
         targetParams.has("id");
       if (hasExtraParams) {
-        history.pushState({}, "", `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
+        history.pushState(buildNavState({}), "", `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
         dispatch();
       } else {
         navigateView(viewLink.dataset.viewLink);
@@ -1272,7 +1284,7 @@ function bindListEvents() {
     const releaseLink = event.target.closest("[data-release-key]");
     if (releaseLink) {
       event.preventDefault();
-      history.pushState({ release: releaseLink.dataset.releaseKey }, "", `?release=${releaseLink.dataset.releaseKey}`);
+      history.pushState(buildNavState({ release: releaseLink.dataset.releaseKey }), "", `?release=${releaseLink.dataset.releaseKey}`);
       dispatch();
       return;
     }
@@ -1625,7 +1637,7 @@ function renderDetailHTML(song) {
   return `
     <div class="detail-view">
       <nav class="detail-nav">
-        <a href="?" class="back-link" data-back>← 一覧に戻る</a>
+        <a href="?view=releases" class="back-link" data-back>← 前のページに戻る</a>
         <span class="detail-breadcrumb">
           <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
         </span>
@@ -1898,4 +1910,5 @@ function bindGlobalEvents() {
 // 起動
 // ----------------------------------------------------------------
 bindGlobalEvents();
+ensureHistoryState();
 dispatch();
