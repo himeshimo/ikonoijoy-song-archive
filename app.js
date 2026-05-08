@@ -74,9 +74,21 @@ function getRouteView() {
   return validViews.has(view) ? view : "home";
 }
 
+function buildNavState(extra = {}) {
+  const params = new URLSearchParams(location.search);
+  const currentView = getRouteView();
+  return {
+    appNav: true,
+    fromUrl: `${location.pathname}${location.search}${location.hash || ""}`,
+    fromView: params.get("view") || currentView,
+    fromRelease: params.get("release") || "",
+    ...extra,
+  };
+}
+
 function navigate(id) {
   const url = id ? `?id=${id}` : location.pathname;
-  history.pushState({ id }, "", url);
+  history.pushState(buildNavState({ id }), "", url);
   dispatch();
 }
 
@@ -84,14 +96,33 @@ function navigateView(view) {
   const params = new URLSearchParams();
   params.set("view", view);
   if (state.releaseQuery) params.set("q", state.releaseQuery);
-  history.pushState({ view }, "", `?${params.toString()}`);
+  history.pushState(buildNavState({ view }), "", `?${params.toString()}`);
   dispatch();
 }
 
 function navigateWithHash(id, hash) {
   const url = id ? `?id=${id}${hash ? "#" + hash : ""}` : location.pathname;
-  history.pushState({ id, hash }, "", url);
+  history.pushState(buildNavState({ id, hash }), "", url);
   dispatch();
+}
+
+function syncRouteScroll() {
+  const id = getRouteId();
+  const release = getRouteRelease();
+  if (!(id || release)) return;
+  if (id && location.hash === "#call") {
+    requestAnimationFrame(() => {
+      document.querySelector("#call")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return;
+  }
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  });
+}
+
+function canUseAppHistoryBack() {
+  return !!(history.length > 1 && history.state && history.state.appNav);
 }
 
 function dispatch() {
@@ -105,6 +136,7 @@ function dispatch() {
     mountListView(getRouteView());
   }
   syncGlobalNav();
+  syncRouteScroll();
 }
 
 window.addEventListener("popstate", dispatch);
@@ -859,6 +891,7 @@ function renderCreators() {
 function renderMixes() {
   const mixList = document.querySelector("#mixList");
   if (!mixList) return;
+  const callPatternList = document.querySelector("#callPatternList");
 
   const baseSongs = songs
     .filter((s) => s.hasCall)
@@ -898,6 +931,51 @@ function renderMixes() {
       return groupRank[a.group] - groupRank[b.group] || a.title.localeCompare(b.title, "ja");
     });
 
+  if (callPatternList) {
+    const patternMap = new Map();
+    callSongs.forEach((song) => {
+      const labels = new Set([
+        ...song.mixes.filter(Boolean),
+        ...song.callNotes.map((note) => (note?.name || "").trim()).filter(Boolean),
+      ]);
+      labels.forEach((label) => {
+        if (!patternMap.has(label)) patternMap.set(label, []);
+        patternMap.get(label).push(song);
+      });
+    });
+
+    const patternEntries = [...patternMap.entries()]
+      .map(([label, list]) => ({
+        label,
+        songs: list.filter((song, idx, arr) => arr.findIndex((s) => s.id === song.id) === idx),
+      }))
+      .filter((item) => item.songs.length > 0)
+      .sort((a, b) => b.songs.length - a.songs.length || a.label.localeCompare(b.label, "ja"))
+      .slice(0, 10);
+
+    callPatternList.innerHTML = patternEntries.length
+      ? patternEntries
+        .map((item) => `
+          <article class="call-pattern-card">
+            <div class="call-pattern-head">
+              <span class="tag">${item.label}</span>
+              <span class="call-pattern-count">${item.songs.length}曲</span>
+            </div>
+            <div class="call-pattern-songs">
+              ${item.songs.slice(0, 6).map((song) => `
+                <a class="call-pattern-song" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">
+                  <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
+                  <span>${song.title}</span>
+                </a>
+              `).join("")}
+              ${item.songs.length > 6 ? `<span class="call-pattern-more">ほか${item.songs.length - 6}曲</span>` : ""}
+            </div>
+          </article>
+        `)
+        .join("")
+      : `<p class="empty">現在の条件では、表示できるMIX/コール種別がありません。</p>`;
+  }
+
   const mixCount = document.querySelector("#mixCount");
   if (mixCount) mixCount.textContent = baseSongs.length;
   const callResultCount = document.querySelector("#callResultCount");
@@ -916,9 +994,9 @@ function renderMixes() {
             <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
             <h3>${song.title}</h3>
           </div>
-          <p class="call-index-meta">${releaseDisplayTitle(song.release?.title || "") || "作品未登録"}</p>
-          <p class="call-index-meta">${levels || "難易度未設定"}</p>
-          <div class="tag-row">${mixTags}</div>
+          ${releaseDisplayTitle(song.release?.title || "") ? `<p class="call-index-meta">${releaseDisplayTitle(song.release?.title || "")}</p>` : ""}
+          ${levels ? `<p class="call-index-meta">${levels}</p>` : ""}
+          ${mixTags ? `<div class="tag-row">${mixTags}</div>` : ""}
           <a class="call-index-link" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">コールを見る</a>
         </article>
       `;
@@ -1394,15 +1472,6 @@ function mountDetailView(id) {
   document.removeEventListener("keydown", handleKeydown);
   document.querySelector("main").innerHTML = renderDetailHTML(song);
   bindDetailEvents(song);
-
-  // #call アンカーがあればスクロール
-  if (location.hash === "#call") {
-    requestAnimationFrame(() => {
-      document.querySelector("#call")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  } else {
-    window.scrollTo({ top: 0 });
-  }
 }
 
 function renderCallSection(song) {
@@ -1438,11 +1507,48 @@ function renderDetailHTML(song) {
 
   // 同じクリエイターが関わる他の曲（作曲・編曲どちらか）
   const RELATED_CREATOR_EXCLUDES = new Set(["指原莉乃"]);
-  const allCreators = [...new Set([...song.composers, ...song.arrangers])]
-    .filter((name) => !RELATED_CREATOR_EXCLUDES.has(name));
+  const sourceComposers = new Set(song.composers.filter((name) => !RELATED_CREATOR_EXCLUDES.has(name)));
+  const sourceArrangers = new Set(song.arrangers.filter((name) => !RELATED_CREATOR_EXCLUDES.has(name)));
+  const toEpochDay = (value) => {
+    if (!value) return null;
+    const normalized = String(value).trim().replace(/\./g, "-");
+    const time = Date.parse(normalized);
+    if (Number.isNaN(time)) return null;
+    return Math.floor(time / 86400000);
+  };
+  const sourceDay = toEpochDay(song.release?.date);
+  const relatedInitialLimit = 8;
+  const relatedStep = 6;
   const relatedSongs = songs
-    .filter((s) => s.id !== song.id && allCreators.some((c) => s.composers.includes(c) || s.arrangers.includes(c)))
-    .slice(0, 8);
+    .filter((s) => s.id !== song.id)
+    .map((s) => {
+      const composerMatchCount = s.composers.filter((name) => sourceComposers.has(name)).length;
+      const arrangerMatchCount = s.arrangers.filter((name) => sourceArrangers.has(name)).length;
+      if (!composerMatchCount && !arrangerMatchCount) return null;
+
+      const hasBoth = composerMatchCount > 0 && arrangerMatchCount > 0;
+      const targetDay = toEpochDay(s.release?.date);
+      let nearReleaseScore = 0;
+      if (sourceDay !== null && targetDay !== null) {
+        const diffDays = Math.abs(sourceDay - targetDay);
+        nearReleaseScore = Math.max(0, 80 - Math.floor(diffDays / 120));
+      }
+
+      const score = (composerMatchCount * 300)
+        + (arrangerMatchCount * 220)
+        + (hasBoth ? 180 : 0)
+        + nearReleaseScore;
+
+      return { song: s, score };
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      const dateSort = (b.song.release?.date || "").localeCompare(a.song.release?.date || "");
+      if (dateSort) return dateSort;
+      return a.song.title.localeCompare(b.song.title, "ja");
+    })
+    .map((item) => item.song);
 
   // 同リリースの収録曲
   const samRelease = song.release?.title
@@ -1487,6 +1593,15 @@ function renderDetailHTML(song) {
   const albumLinks = albumTitles.length
     ? albumTitles.map((title) => toReleaseLink(title)).join(" ")
     : "未収録";
+
+  const toReleaseHref = (title, group = releaseGroupKey) => {
+    const normalizedTitle = normalizeReleaseTitle(title);
+    if (!normalizedTitle) return "";
+    return `?release=${encodeURIComponent(`${group}:${normalizedTitle}`)}`;
+  };
+
+  const primarySingleEntry = singleTitles[0] || null;
+  const primaryAlbumTitle = albumTitles[0] || "";
 
   const basicInfoTop = [
     { label: "グループ", value: groupLabels[song.group] },
@@ -1539,6 +1654,10 @@ function renderDetailHTML(song) {
             </div>
           `).join("")}
         </dl>
+        <div class="detail-return-links">
+          ${primarySingleEntry ? `<a class="back-link back-link--mini" href="${toReleaseHref(primarySingleEntry.title, primarySingleEntry.group)}" data-release-key="${encodeURIComponent(`${primarySingleEntry.group}:${normalizeReleaseTitle(primarySingleEntry.title)}`)}">← シングル / 配信に戻る</a>` : ""}
+          ${primaryAlbumTitle ? `<a class="back-link back-link--mini" href="${toReleaseHref(primaryAlbumTitle)}" data-release-key="${encodeURIComponent(`${releaseGroupKey}:${normalizeReleaseTitle(primaryAlbumTitle)}`)}">← 収録アルバムに戻る</a>` : ""}
+        </div>
       </section>
 
       <section class="detail-credits">
@@ -1570,14 +1689,20 @@ function renderDetailHTML(song) {
         <section class="detail-related">
           <h2>同じクリエイターの曲</h2>
           <div class="related-grid">
-            ${relatedSongs.map((s) => `
-              <a class="related-card" href="?id=${s.id}" data-song-id="${s.id}">
+            ${relatedSongs.map((s, index) => `
+              <a class="related-card" href="?id=${s.id}" data-song-id="${s.id}" ${index >= relatedInitialLimit ? "hidden data-related-extra='1'" : ""}>
                 <span class="group-badge ${s.group}">${groupLabels[s.group]}</span>
                 <span class="related-title">${s.title}</span>
                 ${s.hasCall ? `<span class="related-mix-badge">📣</span>` : ""}
               </a>
             `).join("")}
           </div>
+          ${relatedSongs.length > relatedInitialLimit ? `
+            <div class="related-controls">
+              <button type="button" class="back-link back-link--mini" data-related-more data-related-step="${relatedStep}">さらに表示</button>
+              <button type="button" class="back-link back-link--mini" data-related-all>すべて表示</button>
+            </div>
+          ` : ""}
         </section>
       ` : ""}
 
@@ -1632,10 +1757,25 @@ function bindDetailEvents(currentSong) {
       return;
     }
 
+    const releaseLink = event.target.closest("[data-release-key]");
+    if (releaseLink) {
+      event.preventDefault();
+      history.pushState(buildNavState({ release: releaseLink.dataset.releaseKey }), "", `?release=${releaseLink.dataset.releaseKey}`);
+      dispatch();
+      return;
+    }
+
     // 一覧に戻る
     if (event.target.closest("[data-back]")) {
       event.preventDefault();
-      navigateView(state.page || "releases");
+      if (canUseAppHistoryBack()) {
+        history.back();
+      } else if (history.state?.fromRelease) {
+        history.pushState(buildNavState({ release: history.state.fromRelease }), "", `?release=${history.state.fromRelease}`);
+        dispatch();
+      } else {
+        navigateView("releases");
+      }
       return;
     }
 
@@ -1662,6 +1802,35 @@ function bindDetailEvents(currentSong) {
     // クリエイターパネルを閉じる
     if (event.target.closest("[data-close-creator-panel]")) {
       closeCreatorPanel();
+      return;
+    }
+
+    const relatedMoreBtn = event.target.closest("[data-related-more]");
+    if (relatedMoreBtn) {
+      event.preventDefault();
+      const hiddenCards = [...document.querySelectorAll("[data-related-extra][hidden]")];
+      const step = Math.max(1, Number(relatedMoreBtn.dataset.relatedStep || "6"));
+      hiddenCards.slice(0, step).forEach((card) => {
+        card.hidden = false;
+      });
+      const remain = hiddenCards.length - Math.min(step, hiddenCards.length);
+      if (remain <= 0) {
+        relatedMoreBtn.hidden = true;
+        const allBtn = document.querySelector("[data-related-all]");
+        if (allBtn) allBtn.hidden = true;
+      }
+      return;
+    }
+
+    const relatedAllBtn = event.target.closest("[data-related-all]");
+    if (relatedAllBtn) {
+      event.preventDefault();
+      document.querySelectorAll("[data-related-extra][hidden]").forEach((card) => {
+        card.hidden = false;
+      });
+      relatedAllBtn.hidden = true;
+      const moreBtn = document.querySelector("[data-related-more]");
+      if (moreBtn) moreBtn.hidden = true;
       return;
     }
   });
