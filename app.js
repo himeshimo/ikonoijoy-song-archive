@@ -513,6 +513,54 @@ function hasCallData(song) {
   return song.hasCall === true || hasNotes || hasMixes || hasTextField;
 }
 
+const CALL_PATTERN_NORMALIZE_MAP = {
+  "王道mix": "王道MIX",
+  "王道ミックス": "王道MIX",
+  "通常mix": "王道MIX",
+  "スタンダードmix": "王道MIX",
+  "standardmix": "王道MIX",
+  "日本語mix": "日本語MIX",
+  "日本語ミックス": "日本語MIX",
+  "可変": "可変MIX",
+  "可変mix": "可変MIX",
+  "可変ミックス": "可変MIX",
+  "ガチ恋": "ガチ恋口上",
+  "ガチ恋mix": "ガチ恋口上",
+  "ガチ恋口上": "ガチ恋口上",
+  "クラップ": "クラップ",
+  "手拍子": "クラップ",
+};
+
+function callPatternKey(value) {
+  return String(value || "")
+    .normalize("NFKC")
+    .replace(/\s+/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function normalizeCallPatternName(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const key = callPatternKey(raw);
+  if (CALL_PATTERN_NORMALIZE_MAP[key]) return CALL_PATTERN_NORMALIZE_MAP[key];
+  return raw
+    .replace(/mix/gi, "MIX")
+    .replace(/ミックス/g, "MIX")
+    .trim();
+}
+
+function collectCallPatternLabels(song, { normalized = false } = {}) {
+  const rawLabels = [
+    ...(Array.isArray(song.mixes) ? song.mixes : []),
+    ...(Array.isArray(song.callNotes) ? song.callNotes.map((note) => note?.name || "") : []),
+  ]
+    .map((label) => String(label || "").trim())
+    .filter(Boolean);
+  if (!normalized) return [...new Set(rawLabels)];
+  return [...new Set(rawLabels.map((label) => normalizeCallPatternName(label)).filter(Boolean))];
+}
+
 function searchSongs(query, groupFilter = "all") {
   const normalized = normalize(query || "");
   const normalizedReleaseQuery = normalize(normalizeReleaseTitle(query || ""));
@@ -990,6 +1038,7 @@ function renderMixes() {
           ...(Array.isArray(song.mixes) ? song.mixes : []),
           ...(Array.isArray(song.callNotes) ? song.callNotes.map((n) => n.name || "") : []),
           ...(Array.isArray(song.callNotes) ? song.callNotes.map((n) => n.body || "") : []),
+          ...collectCallPatternLabels(song, { normalized: true }),
         ].join(" ")
       );
       if (!hay.includes(q)) return false;
@@ -1007,10 +1056,7 @@ function renderMixes() {
 
   const patternMap = new Map();
   callSongs.forEach((song) => {
-    const labels = new Set([
-      ...(Array.isArray(song.mixes) ? song.mixes.filter(Boolean) : []),
-      ...(Array.isArray(song.callNotes) ? song.callNotes.map((note) => (note?.name || "").trim()).filter(Boolean) : []),
-    ]);
+    const labels = new Set(collectCallPatternLabels(song, { normalized: true }));
     if (labels.size === 0) labels.add("コール本文あり");
     labels.forEach((label) => {
       if (!patternMap.has(label)) patternMap.set(label, []);
@@ -1061,6 +1107,16 @@ function renderMixes() {
   const cardSongIds = new Set(patternEntries.flatMap((entry) => entry.songs.map((song) => song.id)));
   const leakedSongs = callSongs.filter((song) => !cardSongIds.has(song.id));
   if (DEBUG_CALLS) {
+    const rawPatternSet = new Set(
+      callSongs.flatMap((song) => collectCallPatternLabels(song, { normalized: false }))
+    );
+    const normalizedPatternSet = new Set(
+      callSongs.flatMap((song) => collectCallPatternLabels(song, { normalized: true }))
+    );
+    const unnormalizedCandidates = [...rawPatternSet].filter(
+      (raw) => normalizeCallPatternName(raw) === raw && !CALL_PATTERN_NORMALIZE_MAP[callPatternKey(raw)]
+    );
+
     console.info("[calls coverage]", {
       hasCallTrueCount,
       callNotesCount,
@@ -1070,6 +1126,9 @@ function renderMixes() {
       displayedSongCount: callSongs.length,
       patternCount: patternEntries.length,
       leakedSongIds: leakedSongs.map((song) => song.id),
+      rawPatternCount: rawPatternSet.size,
+      normalizedPatternCount: normalizedPatternSet.size,
+      unnormalizedCandidates,
     });
   }
 }
