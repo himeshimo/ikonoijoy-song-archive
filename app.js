@@ -504,6 +504,14 @@ function songTypeLabel(song) {
   return "グループ曲";
 }
 
+function hasCallData(song) {
+  const hasNotes = Array.isArray(song.callNotes) && song.callNotes.length > 0;
+  const hasMixes = Array.isArray(song.mixes) && song.mixes.length > 0;
+  const hasTextField = ["callText", "call", "callBody", "callMemo"]
+    .some((key) => typeof song[key] === "string" && song[key].trim().length > 0);
+  return song.hasCall === true || hasNotes || hasMixes || hasTextField;
+}
+
 function searchSongs(query, groupFilter = "all") {
   const normalized = normalize(query || "");
   const normalizedReleaseQuery = normalize(normalizeReleaseTitle(query || ""));
@@ -961,8 +969,9 @@ function renderMixes() {
   const callPatternList = document.querySelector("#callPatternList");
   if (!callPatternList) return;
 
-  const callSongs = songs
-    .filter((s) => s.hasCall)
+  const songsWithCallData = songs.filter((song) => hasCallData(song));
+
+  const callSongs = songsWithCallData
     .filter((song) => {
       const groupOk =
         state.callGroupFilter === "all" ||
@@ -977,14 +986,14 @@ function renderMixes() {
           song.release?.title || "",
           groupLabels[song.group],
           song.performer || "",
-          ...song.mixes,
-          ...song.callNotes.map((n) => n.name || ""),
-          ...song.callNotes.map((n) => n.body || ""),
+          ...(Array.isArray(song.mixes) ? song.mixes : []),
+          ...(Array.isArray(song.callNotes) ? song.callNotes.map((n) => n.name || "") : []),
+          ...(Array.isArray(song.callNotes) ? song.callNotes.map((n) => n.body || "") : []),
         ].join(" ")
       );
       if (!hay.includes(q)) return false;
 
-      const levels = song.callNotes.map((n) => n.level).filter(Boolean);
+      const levels = (Array.isArray(song.callNotes) ? song.callNotes : []).map((n) => n.level).filter(Boolean);
       if (state.callLevelFilter !== "all" && !levels.includes(state.callLevelFilter)) return false;
       if (state.callBeginnerOnly && !(levels.length > 0 && levels.every((lv) => lv !== "上級"))) return false;
       if (state.callMixOnly && !(Array.isArray(song.mixes) && song.mixes.length > 0)) return false;
@@ -998,9 +1007,10 @@ function renderMixes() {
   const patternMap = new Map();
   callSongs.forEach((song) => {
     const labels = new Set([
-      ...song.mixes.filter(Boolean),
-      ...song.callNotes.map((note) => (note?.name || "").trim()).filter(Boolean),
+      ...(Array.isArray(song.mixes) ? song.mixes.filter(Boolean) : []),
+      ...(Array.isArray(song.callNotes) ? song.callNotes.map((note) => (note?.name || "").trim()).filter(Boolean) : []),
     ]);
+    if (labels.size === 0) labels.add("コール本文あり");
     labels.forEach((label) => {
       if (!patternMap.has(label)) patternMap.set(label, []);
       patternMap.get(label).push(song);
@@ -1013,8 +1023,7 @@ function renderMixes() {
       songs: list.filter((song, idx, arr) => arr.findIndex((s) => s.id === song.id) === idx),
     }))
     .filter((item) => item.songs.length > 0)
-    .sort((a, b) => b.songs.length - a.songs.length || a.label.localeCompare(b.label, "ja"))
-    .slice(0, 10);
+    .sort((a, b) => b.songs.length - a.songs.length || a.label.localeCompare(b.label, "ja"));
 
   callPatternList.innerHTML = patternEntries.length
     ? patternEntries
@@ -1041,7 +1050,25 @@ function renderMixes() {
   const mixCount = document.querySelector("#mixCount");
   if (mixCount) mixCount.textContent = callSongs.length;
   const callResultCount = document.querySelector("#callResultCount");
-  if (callResultCount) callResultCount.textContent = `表示中 ${callSongs.length}曲（種別カード 最大10件）`;
+  if (callResultCount) callResultCount.textContent = `表示中 ${callSongs.length}曲`;
+
+  const hasCallTrueCount = songs.filter((song) => song.hasCall === true).length;
+  const callNotesCount = songs.filter((song) => Array.isArray(song.callNotes) && song.callNotes.length > 0).length;
+  const mixesCount = songs.filter((song) => Array.isArray(song.mixes) && song.mixes.length > 0).length;
+  const textCallCount = songs.filter((song) => ["callText", "call", "callBody", "callMemo"].some((key) => typeof song[key] === "string" && song[key].trim().length > 0)).length;
+
+  const cardSongIds = new Set(patternEntries.flatMap((entry) => entry.songs.map((song) => song.id)));
+  const leakedSongs = callSongs.filter((song) => !cardSongIds.has(song.id));
+  console.info("[calls coverage]", {
+    hasCallTrueCount,
+    callNotesCount,
+    mixesCount,
+    textCallCount,
+    callTargetCount: songsWithCallData.length,
+    displayedSongCount: callSongs.length,
+    patternCount: patternEntries.length,
+    leakedSongIds: leakedSongs.map((song) => song.id),
+  });
 }
 
 function renderStats() {
