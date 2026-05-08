@@ -87,6 +87,18 @@ function buildNavState(extra = {}) {
 }
 
 const INTERNAL_HISTORY_KEY = "ikonoijoy:internalHistoryStack";
+const HISTORY_DEBUG = true;
+let listMainClickHandler = null;
+let releaseDetailMainClickHandler = null;
+let detailMainClickHandler = null;
+
+function clearMainClickHandlers() {
+  const mainEl = document.querySelector("main");
+  if (!mainEl) return;
+  if (listMainClickHandler) mainEl.removeEventListener("click", listMainClickHandler);
+  if (releaseDetailMainClickHandler) mainEl.removeEventListener("click", releaseDetailMainClickHandler);
+  if (detailMainClickHandler) mainEl.removeEventListener("click", detailMainClickHandler);
+}
 
 function currentInternalUrl() {
   return `${location.pathname}${location.search}${location.hash || ""}`;
@@ -111,6 +123,7 @@ function recordInternalPreviousUrl(url) {
   const stack = readInternalHistoryStack();
   if (stack[stack.length - 1] !== url) stack.push(url);
   writeInternalHistoryStack(stack);
+  if (HISTORY_DEBUG) console.debug("[history record]", { pushed: url, size: stack.length });
 }
 
 function popPreviousInternalUrl() {
@@ -120,14 +133,18 @@ function popPreviousInternalUrl() {
     const candidate = stack.pop();
     if (!candidate || candidate === now) continue;
     writeInternalHistoryStack(stack);
+    if (HISTORY_DEBUG) console.debug("[history pop]", { target: candidate, size: stack.length });
     return candidate;
   }
   writeInternalHistoryStack(stack);
+  if (HISTORY_DEBUG) console.debug("[history pop]", { target: "", size: stack.length });
   return "";
 }
 
 function pushInternalRoute(url, stateExtra = {}, { recordPrevious = true } = {}) {
-  if (recordPrevious) recordInternalPreviousUrl(currentInternalUrl());
+  const fromUrl = currentInternalUrl();
+  if (recordPrevious) recordInternalPreviousUrl(fromUrl);
+  if (HISTORY_DEBUG) console.debug("[history push]", { from: fromUrl, to: url, recordPrevious });
   history.pushState(buildNavState(stateExtra), "", url);
   dispatch();
 }
@@ -215,6 +232,7 @@ const state = {
 
 function mountListView(page) {
   document.querySelector("main").innerHTML = LIST_HTML;
+  clearMainClickHandlers();
   state.page = page;
   const q = getRouteQuery();
   const routeGroup = getRouteGroup();
@@ -1284,7 +1302,9 @@ function bindListEvents() {
     });
   });
 
-  document.querySelector("main").addEventListener("click", (event) => {
+  const mainEl = document.querySelector("main");
+  if (listMainClickHandler) mainEl.removeEventListener("click", listMainClickHandler);
+  listMainClickHandler = (event) => {
     const viewLink = event.target.closest("a[data-view-link]");
     if (viewLink) {
       event.preventDefault();
@@ -1365,7 +1385,8 @@ function bindListEvents() {
       state.callLimit = 24;
       renderMixes();
     }
-  });
+  };
+  mainEl.addEventListener("click", listMainClickHandler);
 
   document.querySelectorAll("[data-close-dialog]").forEach((element) => {
     element.addEventListener("click", () => {
@@ -1484,7 +1505,10 @@ function mountReleaseDetailView(routeKey) {
     </div>
   `;
 
-  document.querySelector("main").addEventListener("click", (event) => {
+  clearMainClickHandlers();
+  const mainEl = document.querySelector("main");
+  if (releaseDetailMainClickHandler) mainEl.removeEventListener("click", releaseDetailMainClickHandler);
+  releaseDetailMainClickHandler = (event) => {
     const songLink = event.target.closest("[data-song-id]");
     if (songLink) {
       event.preventDefault();
@@ -1496,7 +1520,8 @@ function mountReleaseDetailView(routeKey) {
       event.preventDefault();
       navigateView("releases");
     }
-  });
+  };
+  mainEl.addEventListener("click", releaseDetailMainClickHandler);
 }
 
 // ----------------------------------------------------------------
@@ -1517,6 +1542,7 @@ function mountDetailView(id) {
 
   document.removeEventListener("keydown", handleKeydown);
   document.querySelector("main").innerHTML = renderDetailHTML(song);
+  clearMainClickHandlers();
   bindDetailEvents(song);
 }
 
@@ -1789,7 +1815,9 @@ function renderDetailHTML(song) {
 }
 
 function bindDetailEvents(currentSong) {
-  document.querySelector("main").addEventListener("click", (event) => {
+  const mainEl = document.querySelector("main");
+  if (detailMainClickHandler) mainEl.removeEventListener("click", detailMainClickHandler);
+  detailMainClickHandler = (event) => {
     // 曲詳細間ナビゲーション
     const songLink = event.target.closest("[data-song-id]");
     if (songLink) {
@@ -1878,7 +1906,8 @@ function bindDetailEvents(currentSong) {
       if (moreBtn) moreBtn.hidden = true;
       return;
     }
-  });
+  };
+  mainEl.addEventListener("click", detailMainClickHandler);
 }
 
 function openCreatorPanel(name) {
