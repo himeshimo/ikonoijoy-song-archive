@@ -561,6 +561,49 @@ function collectCallPatternLabels(song, { normalized = false } = {}) {
   return [...new Set(rawLabels.map((label) => normalizeCallPatternName(label)).filter(Boolean))];
 }
 
+function beginnerScore(song) {
+  const notes = Array.isArray(song.callNotes) ? song.callNotes : [];
+  const levels = notes.map((n) => String(n?.level || "").trim()).filter(Boolean);
+  const normalizedPatterns = collectCallPatternLabels(song, { normalized: true });
+  const mixCount = Array.isArray(song.mixes) ? song.mixes.filter(Boolean).length : 0;
+  const callTextLength = notes.reduce((sum, note) => sum + String(note?.body || "").trim().length, 0);
+  const avgNoteLength = notes.length ? callTextLength / notes.length : 0;
+
+  let score = 50;
+
+  // 加点: 公式/初級/beginner 指定
+  if (levels.includes("公式")) score += 28;
+  if (levels.includes("初級")) score += 22;
+  if (levels.some((lv) => /beginner|初心者/i.test(lv))) score += 18;
+  if (song.beginner === true || notes.some((n) => n?.beginner === true)) score += 20;
+
+  // 加点: 定番・入りやすいMIX
+  if (normalizedPatterns.includes("王道MIX")) score += 14;
+  if (normalizedPatterns.includes("日本語MIX")) score += 12;
+  if (normalizedPatterns.includes("クラップ")) score += 12;
+
+  // 加点/減点: MIX数
+  if (mixCount <= 1) score += 14;
+  else if (mixCount === 2) score += 8;
+  else if (mixCount >= 4) score -= 10;
+  else if (mixCount >= 6) score -= 16;
+
+  // 減点: 上級・難しめ要素
+  const advancedCount = levels.filter((lv) => lv === "上級").length;
+  score -= advancedCount * 20;
+  const variableCount = normalizedPatterns.filter((name) => name === "可変MIX").length;
+  score -= variableCount * 14;
+  if (normalizedPatterns.includes("ガチ恋口上")) score -= 16;
+
+  // 減点: コール本文が長い(暗記コスト増)
+  if (avgNoteLength > 240) score -= 12;
+  else if (avgNoteLength > 160) score -= 8;
+  else if (avgNoteLength > 110) score -= 4;
+  if (callTextLength > 900) score -= 10;
+
+  return Math.max(0, Math.round(score));
+}
+
 function searchSongs(query, groupFilter = "all") {
   const normalized = normalize(query || "");
   const normalizedReleaseQuery = normalize(normalizeReleaseTitle(query || ""));
@@ -1095,23 +1138,17 @@ function renderMixes() {
       .join("")
     : `<p class="empty">現在の条件に合うコール/MIX種別はありません。</p>`;
 
-  const beginnerSongs = callSongs
-    .filter((song) => {
-      const levels = (Array.isArray(song.callNotes) ? song.callNotes : []).map((n) => n.level).filter(Boolean);
-      return levels.length > 0 && levels.every((lv) => lv !== "上級");
-    })
+  const beginnerCandidates = callSongs
+    .map((song) => ({ song, score: beginnerScore(song) }))
+    .filter(({ score }) => score > 0)
     .sort((a, b) => {
-      const levelWeight = (song) => {
-        const levels = (Array.isArray(song.callNotes) ? song.callNotes : []).map((n) => n.level).filter(Boolean);
-        if (levels.includes("公式")) return 0;
-        if (levels.includes("中級")) return 1;
-        return 2;
-      };
-      const lw = levelWeight(a) - levelWeight(b);
-      if (lw) return lw;
-      return (b.release?.date || "").localeCompare(a.release?.date || "") || a.title.localeCompare(b.title, "ja");
-    })
-    .slice(0, 8);
+      if (b.score !== a.score) return b.score - a.score;
+      const dateSort = (b.song.release?.date || "").localeCompare(a.song.release?.date || "");
+      if (dateSort) return dateSort;
+      return a.song.title.localeCompare(b.song.title, "ja");
+    });
+
+  const beginnerSongs = beginnerCandidates.slice(0, 8).map(({ song }) => song);
 
   callBeginnerList.innerHTML = beginnerSongs.length
     ? beginnerSongs
@@ -1123,6 +1160,17 @@ function renderMixes() {
       `)
       .join("")
     : `<p class="empty">初心者向けとして表示できる曲はまだ少ないため、下の種別カードから探してください。</p>`;
+
+  if (DEBUG_CALLS) {
+    console.info(
+      "[calls beginner ranking]",
+      beginnerCandidates.slice(0, 12).map(({ song, score }) => ({
+        id: song.id,
+        title: song.title,
+        score,
+      }))
+    );
+  }
 
   const mixCount = document.querySelector("#mixCount");
   if (mixCount) mixCount.textContent = callSongs.length;
