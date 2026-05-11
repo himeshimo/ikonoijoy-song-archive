@@ -92,6 +92,7 @@ const DEBUG_CALLS = false;
 let listMainClickHandler = null;
 let releaseDetailMainClickHandler = null;
 let detailMainClickHandler = null;
+let heroToneMode = "auto";
 
 function clearMainClickHandlers() {
   const mainEl = document.querySelector("main");
@@ -167,6 +168,56 @@ function navigateWithHash(id, hash) {
   pushInternalRoute(url, { id, hash });
 }
 
+
+
+function normalizeAccentKey(group) {
+  if (group === 'allgroup') return 'all';
+  return ['love', 'me', 'joy', 'all'].includes(group) ? group : 'all';
+}
+
+function applyAmbientAccent(group) {
+  const accent = normalizeAccentKey(group);
+  document.body.dataset.accent = accent;
+  const main = document.querySelector('main');
+  if (main) main.dataset.accent = accent;
+  const searchMode = document.querySelector('#searchMode');
+  if (searchMode && !searchMode.dataset.hoverAccent) {
+    searchMode.dataset.accent = accent;
+  }
+}
+
+function resolveAmbientAccent() {
+  const id = getRouteId();
+  if (id) {
+    const currentSong = songs.find((song) => song.id === id);
+    if (currentSong) return normalizeAccentKey(currentSong.group);
+  }
+
+  const releaseRoute = getRouteRelease();
+  if (releaseRoute) {
+    const decoded = decodeURIComponent(releaseRoute);
+    const release = groupedReleases().find((item) => item.key === decoded) || groupedReleases().find((item) => {
+      const [g, t] = item.key.split(':');
+      const parts = decoded.split(':');
+      if (parts.length >= 2) return g === parts[0] && t === normalizeReleaseTitle(parts[1] || '');
+      return t === normalizeReleaseTitle(decoded || '');
+    });
+    if (release?.songs?.length) {
+      const head = release.songs[0];
+      return normalizeAccentKey(head.releaseGroup || head.group);
+    }
+  }
+
+  const view = getRouteView();
+  if (view === 'releases') return normalizeAccentKey(state.releaseGroupFilter || getRouteGroup());
+  if (view === 'calls') return normalizeAccentKey(state.callGroupFilter || 'all');
+  return 'all';
+}
+
+function syncAmbientAccent() {
+  applyAmbientAccent(resolveAmbientAccent());
+}
+
 function syncRouteScroll() {
   const id = getRouteId();
   const release = getRouteRelease();
@@ -195,6 +246,8 @@ function ensureHistoryState() {
 }
 
 function dispatch() {
+  bindFloatingSearch();
+  syncFloatingSearchFromRoute();
   const id = getRouteId();
   const release = getRouteRelease();
   if (id) {
@@ -205,6 +258,7 @@ function dispatch() {
     mountListView(getRouteView());
   }
   syncGlobalNav();
+  syncAmbientAccent();
   syncRouteScroll();
 }
 
@@ -1290,6 +1344,27 @@ function bindListEvents() {
   const homeSongSearchInput = document.querySelector("#homeSongSearchInput");
   if (homeSongSearchInput) {
     homeSongSearchInput.value = state.songQuery;
+
+    const openSearchModeFromHomeInput = () => {
+      const modalInput = document.querySelector("#searchModeInput");
+      if (!modalInput) return;
+      modalInput.value = homeSongSearchInput.value || "";
+      suppressSearchModeAutoCloseUntil = Date.now() + 260;
+      openFloatingSearch();
+      renderFloatingSearchResults(modalInput.value);
+      modalInput.focus();
+      modalInput.select();
+      homeSongSearchInput.blur();
+    };
+
+    homeSongSearchInput.addEventListener("click", (event) => {
+      event.preventDefault();
+      openSearchModeFromHomeInput();
+    });
+
+    homeSongSearchInput.addEventListener("focus", () => {
+      openSearchModeFromHomeInput();
+    });
     homeSongSearchInput.addEventListener("input", (event) => {
       state.songQuery = event.target.value;
       renderReleases();
@@ -1390,6 +1465,7 @@ function bindListEvents() {
       document.querySelectorAll("[data-call-group]").forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
       state.callGroupFilter = button.dataset.callGroup;
+      syncAmbientAccent();
       renderMixes();
     });
   });
@@ -1503,6 +1579,27 @@ function bindListEvents() {
   document.addEventListener("keydown", handleKeydown);
 }
 
+
+
+function applyHeroToneMode() {
+  const hero = document.querySelector('#homeHero');
+  if (!hero) return;
+  hero.dataset.heroTone = heroToneMode;
+  hero.querySelectorAll('[data-hero-tone]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.heroTone === heroToneMode);
+  });
+
+  const accent = heroToneMode === 'auto' ? 'all' : heroToneMode;
+  applyAmbientAccent(accent);
+  syncFloatingAccentFromPage();
+}
+
+function bindHeroToneControls() {
+  const hero = document.querySelector('#homeHero');
+  if (!hero) return;
+  applyHeroToneMode();
+}
+
 function renderListPage() {
   const sections = ["home", "releases", "creators", "calls"];
 
@@ -1513,8 +1610,30 @@ function renderListPage() {
   });
   const hero = document.querySelector("#homeHero");
   if (hero) hero.hidden = state.page !== "home";
+  if (state.page === "home") bindHeroToneControls();
   const homeSearchCount = document.querySelector("#homeSearchCount");
   if (homeSearchCount && !state.songQuery) homeSearchCount.textContent = "";
+}
+
+
+
+function bindHeroToneGlobalDelegate() {
+  if (document.body.dataset.heroToneDelegateBound === '1') return;
+  document.body.dataset.heroToneDelegateBound = '1';
+
+  document.addEventListener('click', (event) => {
+    const toneButton = event.target.closest('[data-hero-tone]');
+    if (!toneButton) return;
+
+    const hero = document.querySelector('#homeHero');
+    if (!hero || hero.hidden) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    heroToneMode = toneButton.dataset.heroTone || 'auto';
+    applyHeroToneMode();
+  });
 }
 
 function syncGlobalNav() {
@@ -1529,6 +1648,7 @@ function syncGlobalNav() {
 function handleKeydown(event) {
   if (event.key === "Escape") {
     closeCreatorDialog();
+    closeFloatingSearch();
   }
 }
 
@@ -1650,6 +1770,7 @@ function mountDetailView(id) {
   document.querySelector("main").innerHTML = renderDetailHTML(song);
   clearMainClickHandlers();
   bindDetailEvents(song);
+  enhanceRelatedCards(song);
 }
 
 function renderCallSection(song) {
@@ -1920,6 +2041,59 @@ function renderDetailHTML(song) {
   `;
 }
 
+function enhanceRelatedCards(currentSong) {
+  const excludes = new Set(["指原莉乃"]);
+  const sourceComposers = new Set((currentSong.composers || []).filter((name) => !excludes.has(name)));
+  const sourceArrangers = new Set((currentSong.arrangers || []).filter((name) => !excludes.has(name)));
+  const sourceLyricists = new Set((currentSong.lyricists || []).filter((name) => !excludes.has(name)));
+
+  const buildReasonLabels = (targetSong, sameRelease = false) => {
+    const labels = [];
+    if ((targetSong.composers || []).some((name) => sourceComposers.has(name))) labels.push("作曲一致");
+    if ((targetSong.arrangers || []).some((name) => sourceArrangers.has(name))) labels.push("編曲一致");
+    if ((targetSong.lyricists || []).some((name) => sourceLyricists.has(name))) labels.push("作詞一致");
+    // 「同じ作品の曲」見出しで意味が明確なため、同作品チップは出さない
+    return labels.slice(0, 3);
+  };
+
+  const decorate = (selector, sameRelease = false) => {
+    document.querySelectorAll(selector).forEach((card) => {
+      card.classList.add("related-card--discover");
+      const songId = card.dataset.songId;
+      const targetSong = songs.find((item) => item.id === songId);
+      if (!targetSong) return;
+
+      if (!card.querySelector('.related-top-row')) {
+        const badge = card.querySelector('.group-badge');
+        const mixBadge = card.querySelector('.related-mix-badge');
+        if (badge) {
+          const top = document.createElement('span');
+          top.className = 'related-top-row';
+          top.appendChild(badge);
+          if (mixBadge) top.appendChild(mixBadge);
+          card.insertBefore(top, card.firstChild);
+        }
+      }
+
+      if (sameRelease) return;
+      if (card.querySelector('.related-reasons')) return;
+      const reasonWrap = document.createElement('span');
+      reasonWrap.className = 'related-reasons';
+      const labels = buildReasonLabels(targetSong, sameRelease);
+      (labels.length ? labels : ['クリエイター関連']).forEach((label) => {
+        const chip = document.createElement('span');
+        chip.className = 'related-reason-chip';
+        chip.textContent = label;
+        reasonWrap.appendChild(chip);
+      });
+      card.appendChild(reasonWrap);
+    });
+  };
+
+  decorate('.detail-related .related-card', false);
+  decorate('.detail-release-songs .related-card', true);
+}
+
 function bindDetailEvents(currentSong) {
   const mainEl = document.querySelector("main");
   if (detailMainClickHandler) mainEl.removeEventListener("click", detailMainClickHandler);
@@ -2078,5 +2252,314 @@ function bindGlobalEvents() {
 // 起動
 // ----------------------------------------------------------------
 bindGlobalEvents();
+bindHeroToneGlobalDelegate();
 ensureHistoryState();
 dispatch();
+
+var floatingSearchBound = false;
+var floatingPanelOpen = false;
+let searchModeActiveIndex = -1;
+let suppressSearchModeAutoCloseUntil = 0;
+
+function setFloatingAccent(group) {
+  const root = document.querySelector("#searchMode");
+  if (!root) return;
+  const key = group === "allgroup" ? "all" : group;
+  root.dataset.accent = ["love", "me", "joy", "all"].includes(key) ? key : "all";
+}
+
+function syncFloatingAccentFromPage() {
+  const view = getRouteView();
+  if (view === "releases") {
+    setFloatingAccent(state.releaseGroupFilter || getRouteGroup());
+    return;
+  }
+  if (view === "calls") {
+    setFloatingAccent(state.callGroupFilter || "all");
+    return;
+  }
+  setFloatingAccent("all");
+}
+
+function resetSearchModeState() {
+  const input = document.querySelector("#searchModeInput");
+  if (input) input.value = "";
+  searchModeActiveIndex = -1;
+  renderFloatingSearchResults("");
+  updateSearchModeActiveItem();
+}
+
+function closeFloatingSearch() {
+  const root = document.querySelector("#searchMode");
+  const panel = document.querySelector("#searchModePanel");
+  if (!root || !panel) return;
+  floatingPanelOpen = false;
+  panel.hidden = true;
+  root.classList.remove("is-open");
+  root.setAttribute("aria-hidden", "true");
+  resetSearchModeState();
+}
+
+function openFloatingSearch() {
+  const root = document.querySelector("#searchMode");
+  const panel = document.querySelector("#searchModePanel");
+  if (!root || !panel) return;
+  floatingPanelOpen = true;
+  panel.hidden = false;
+  root.classList.add("is-open");
+  root.setAttribute("aria-hidden", "false");
+}
+
+function renderFloatingItems(targetSelector, itemsHtml, emptyText = "該当なし") {
+  const el = document.querySelector(targetSelector);
+  if (!el) return;
+  el.innerHTML = itemsHtml.length ? itemsHtml.join("") : `<p class="search-mode-empty">${emptyText}</p>`;
+}
+
+
+
+function getSearchModeItems() {
+  return [...document.querySelectorAll('.search-mode-item')];
+}
+
+function updateSearchModeActiveItem() {
+  const items = getSearchModeItems();
+  items.forEach((item, index) => {
+    item.classList.toggle('is-active', index === searchModeActiveIndex);
+  });
+}
+
+function renderFloatingSearchResults(rawQuery) {
+  const query = (rawQuery || "").trim();
+  const normalized = normalize(query);
+
+  if (!normalized) {
+    renderFloatingItems("#floatingSongResults", []);
+    renderFloatingItems("#floatingReleaseResults", []);
+    renderFloatingItems("#floatingCreatorResults", []);
+    renderFloatingItems("#floatingCallResults", []);
+    return;
+  }
+
+  const songsFound = searchSongs(query, "all").slice(0, 6);
+  renderFloatingItems(
+    "#floatingSongResults",
+    songsFound.map(
+      (song) => `
+      <a class="search-mode-item" href="?id=${song.id}" data-song-id="${song.id}" data-group="${song.group}">
+        <span class="search-mode-item-title">${song.title}</span>
+        <span class="search-mode-item-meta">${groupLabels[song.group]}</span>
+      </a>
+    `
+    ),
+    "該当する楽曲なし"
+  );
+
+  const releaseFound = groupedReleases()
+    .filter(({ songs: releaseSongs }) => {
+      const head = releaseSongs[0];
+      const title = releaseTitle(head);
+      const hay = normalize([title, head.release?.title || "", ...releaseSongs.map((x) => x.title)].join(" "));
+      return hay.includes(normalized);
+    })
+    .slice(0, 6);
+
+  renderFloatingItems(
+    "#floatingReleaseResults",
+    releaseFound.map(({ key, songs: releaseSongs }) => {
+      const head = releaseSongs[0];
+      const title = releaseTitle(head);
+      const group = head.releaseGroup || head.group;
+      return `
+        <a class="search-mode-item" href="?release=${encodeURIComponent(key)}" data-release-key="${key}" data-group="${group}">
+          <span class="search-mode-item-title">${title}</span>
+          <span class="search-mode-item-meta">${groupLabels[group]} / ${head.release?.type || "未登録"}</span>
+        </a>
+      `;
+    }),
+    "該当する作品なし"
+  );
+
+  const creatorFound = searchCreatorCandidates(query, 6);
+  renderFloatingItems(
+    "#floatingCreatorResults",
+    creatorFound.map(
+      (creator) => `
+      <a class="search-mode-item" href="?view=creators&q=${encodeURIComponent(query)}" data-view-route="creators" data-query="${encodeURIComponent(query)}">
+        <span class="search-mode-item-title">${creator.name}</span>
+        <span class="search-mode-item-meta">${creator.songCount}曲 / ${creator.mainRoles.slice(0, 2).join("・") || "担当あり"}</span>
+      </a>
+    `
+    ),
+    "該当するクリエイターなし"
+  );
+
+  const callFound = searchCallCandidates(query, "all", 6);
+  renderFloatingItems(
+    "#floatingCallResults",
+    callFound.map(
+      (song) => `
+      <a class="search-mode-item" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call" data-group="${song.group}">
+        <span class="search-mode-item-title">${song.title}</span>
+        <span class="search-mode-item-meta">${groupLabels[song.group]} / ${collectCallPatternLabels(song, { normalized: true }).slice(0, 1).join("") || "コールあり"}</span>
+      </a>
+    `
+    ),
+    "該当するコールなし"
+  );
+
+  const topGroup = songsFound[0]?.group || releaseFound[0]?.songs?.[0]?.group || "all";
+  setFloatingAccent(topGroup);
+  searchModeActiveIndex = -1;
+  updateSearchModeActiveItem();
+}
+
+function syncFloatingSearchFromRoute() {
+  const input = document.querySelector("#searchModeInput");
+  if (!input) return;
+  if (floatingPanelOpen) renderFloatingSearchResults(input.value);
+  syncFloatingAccentFromPage();
+}
+
+function focusSearchModeFromTrigger() {
+  const input = document.querySelector("#searchModeInput");
+  if (!input) return;
+  input.value = "";
+  suppressSearchModeAutoCloseUntil = Date.now() + 260;
+  openFloatingSearch();
+  renderFloatingSearchResults("");
+  input.focus();
+  input.select();
+}
+
+function bindFloatingSearch() {
+  if (floatingSearchBound) return;
+  const root = document.querySelector("#searchMode");
+  const input = document.querySelector("#searchModeInput");
+  const panel = document.querySelector("#searchModePanel");
+  const trigger = document.querySelector("#searchModeTrigger");
+  if (!root || !input || !panel) return;
+  if (trigger) {
+    trigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      focusSearchModeFromTrigger();
+    });
+  }
+  floatingSearchBound = true;
+
+  input.addEventListener("focus", () => {
+    openFloatingSearch();
+    renderFloatingSearchResults(input.value);
+    syncFloatingAccentFromPage();
+  });
+
+  input.addEventListener("input", (event) => {
+    openFloatingSearch();
+    renderFloatingSearchResults(event.target.value);
+  });
+
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      const items = getSearchModeItems();
+      if (!items.length) return;
+      searchModeActiveIndex = Math.min(items.length - 1, searchModeActiveIndex + 1);
+      updateSearchModeActiveItem();
+      items[searchModeActiveIndex]?.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      const items = getSearchModeItems();
+      if (!items.length) return;
+      searchModeActiveIndex = Math.max(0, searchModeActiveIndex - 1);
+      updateSearchModeActiveItem();
+      items[searchModeActiveIndex]?.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const items = getSearchModeItems();
+      if (searchModeActiveIndex >= 0 && items[searchModeActiveIndex]) {
+        items[searchModeActiveIndex].click();
+        return;
+      }
+      const q = input.value.trim();
+      pushInternalRoute(`?view=releases${q ? `&q=${encodeURIComponent(q)}` : ""}`, { view: "releases", q });
+      closeFloatingSearch();
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeFloatingSearch();
+      input.blur();
+    }
+  });
+
+  root.addEventListener("mouseover", (event) => {
+    const groupedItem = event.target.closest(".search-mode-item[data-group]");
+    if (!groupedItem) return;
+    root.dataset.hoverAccent = "1";
+    const accent = normalizeAccentKey(groupedItem.dataset.group);
+    root.dataset.accent = accent;
+    applyAmbientAccent(accent);
+  });
+
+  root.addEventListener("mouseleave", () => {
+    delete root.dataset.hoverAccent;
+    syncFloatingAccentFromPage();
+    syncAmbientAccent();
+  });
+
+  root.addEventListener("click", (event) => {
+    if (event.target.closest("[data-close-search-mode]")) {
+      closeFloatingSearch();
+      return;
+    }
+    const item = event.target.closest(".search-mode-item");
+    if (!item) return;
+    event.preventDefault();
+    if (item.dataset.songId) {
+      const hash = item.dataset.hash || "";
+      if (hash) navigateWithHash(item.dataset.songId, hash);
+      else navigate(item.dataset.songId);
+      closeFloatingSearch();
+      return;
+    }
+    if (item.dataset.releaseKey) {
+      pushInternalRoute(`?release=${item.dataset.releaseKey}`, { release: item.dataset.releaseKey });
+      closeFloatingSearch();
+      return;
+    }
+    if (item.dataset.viewRoute) {
+      const q = decodeURIComponent(item.dataset.query || "");
+      pushInternalRoute(`?view=${item.dataset.viewRoute}${q ? `&q=${encodeURIComponent(q)}` : ""}`, { view: item.dataset.viewRoute, q });
+      closeFloatingSearch();
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!floatingPanelOpen) return;
+    if (Date.now() < suppressSearchModeAutoCloseUntil) return;
+    if (root.contains(event.target)) return;
+    const trigger = event.target.closest("#searchModeTrigger");
+    if (trigger) return;
+    const homeSearchInput = event.target.closest("#homeSongSearchInput");
+    if (homeSearchInput) return;
+    closeFloatingSearch();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && floatingPanelOpen) {
+      closeFloatingSearch();
+      return;
+    }
+    const isCmdK = (event.metaKey || event.ctrlKey) && String(event.key).toLowerCase() === "k";
+    if (!isCmdK) return;
+    event.preventDefault();
+    suppressSearchModeAutoCloseUntil = Date.now() + 260;
+    openFloatingSearch();
+    input.focus();
+    input.select();
+  });
+}

@@ -19,21 +19,58 @@
         <a href="?view=releases" data-view-link="releases">作品</a>
         <a href="?view=creators" data-view-link="creators">クリエイター</a>
         <a href="?view=calls" data-view-link="calls">コール(MIX)</a>
+        <button type="button" class="nav-search-trigger" id="searchModeTrigger" aria-label="検索を開く">検索 <kbd>⌘K</kbd></button>
       </nav>
     </header>
+
+    <section class="search-mode" id="searchMode" data-accent="all" aria-hidden="true">
+      <div class="search-mode-backdrop" data-close-search-mode></div>
+      <div class="search-mode-shell" role="dialog" aria-modal="true" aria-label="検索モード">
+        <div class="search-mode-head">
+          <label class="search-mode-input-wrap" for="searchModeInput">
+            <span class="search-mode-icon" aria-hidden="true">⌕</span>
+            <input id="searchModeInput" type="search" placeholder="曲名・作品名・クリエイター・コール(MIX)を検索" autocomplete="off" />
+            <button type="button" class="search-mode-close" data-close-search-mode aria-label="閉じる">Esc</button>
+          </label>
+        </div>
+        <div class="search-mode-panel" id="searchModePanel">
+          <section class="search-mode-group">
+            <h3>楽曲</h3>
+            <div id="floatingSongResults" class="search-mode-items"></div>
+          </section>
+          <section class="search-mode-group">
+            <h3>作品</h3>
+            <div id="floatingReleaseResults" class="search-mode-items"></div>
+          </section>
+          <section class="search-mode-group">
+            <h3>クリエイター</h3>
+            <div id="floatingCreatorResults" class="search-mode-items"></div>
+          </section>
+          <section class="search-mode-group">
+            <h3>コール(MIX)</h3>
+            <div id="floatingCallResults" class="search-mode-items"></div>
+          </section>
+        </div>
+      </div>
+    </section>
 
     <main>
       <section class="hero" id="homeHero">
         <div class="hero-inner">
-          <p class="eyebrow">Fan-made archive</p>
-          <h1 class="hero-main-copy">イコノイジョイ楽曲を、<br><span class="hero-main-mid">作品・クリエイター・コール</span><br>から自由に探せる。</h1>
-          <p class="hero-sub-copy">ライブ前のコール確認から、楽曲の深掘りまで一つで。</p>
+          <p class="eyebrow">SONG/CREATOR/LIVECALL ARCHIVE</p>
+          <h1 class="hero-main-copy"><span class="hero-title-line1">イコノイジョイの楽曲を</span><br><span class="hero-title-line2"><span class="hero-main-mid hero-title-highlight">もっと深く</span>探せる</span><br><span class="hero-title-line3">作品・クリエイター・コールを一目で確認。ライブ前の確認から楽曲の深掘りまで。</span></h1>
+          <div class="hero-tone-switch" role="group" aria-label="ヒーロー演出カラー">
+            <button type="button" class="hero-tone-button active" data-hero-tone="auto">すべて</button>
+            <button type="button" class="hero-tone-button" data-hero-tone="love">=LOVE</button>
+            <button type="button" class="hero-tone-button" data-hero-tone="me">≠ME</button>
+            <button type="button" class="hero-tone-button" data-hero-tone="joy">≒JOY</button>
+          </div>
         </div>
       </section>
 
       <section class="section" id="home">
         <div class="release-tools">
-          <label class="search-box release-search">
+          <label class="search-box release-search hero-search-box">
             <span>横断検索</span>
             <input id="homeSongSearchInput" type="search" placeholder="曲名、作品名、クリエイター名、メンバー名、グループ名で検索" autocomplete="off" />
           </label>
@@ -53,13 +90,15 @@
           </a>
         </div>
         <section class="group-intro">
-          <article class="group-intro-card">
+          <article class="group-intro-card group-intro-card--love group-intro-card--archive">
             <div class="group-intro-top">
+              <p class="group-year">結成 2017</p>
               <h3><span class="group-badge love">=LOVE</span></h3>
-              <p>指原莉乃プロデュースで誕生したアイドルグループ。代々木アニメーション学院との共同プロジェクトとして結成された。</p>
-              <p>グループ名には</p>
-              <p class="group-quote">「アイドルとはファンに愛されなければいけない。そしてアイドルという仕事も自分が愛さなければいけない。」</p>
-              <p>という想いが込められています。</p>
+              <p class="group-idea">「アイドルとはファンに愛されなければいけない。そしてアイドルという仕事も自分が愛さなければいけない。」<br>という想いが込められています。</p>
+              <div class="group-meta-row">
+                <span>LEADER: ANNA</span>
+                <span>LATEST: 劇薬中毒 (2026.04.01)</span>
+              </div>
             </div>
             <div class="group-intro-bottom">
               <p class="member-label">メンバー</p>
@@ -69,13 +108,15 @@
               <a class="call-index-link" href="?view=releases&group=love">=LOVEの作品を見る</a>
             </div>
           </article>
-          <article class="group-intro-card">
+          <article class="group-intro-card group-intro-card--me group-intro-card--archive">
             <div class="group-intro-top">
+              <p class="group-year">結成 2019</p>
               <h3><span class="group-badge me">≠ME</span></h3>
-              <p>=LOVEの姉妹グループとして誕生したアイドルグループ。</p>
-              <p>グループ名には</p>
-              <p class="group-quote">「今までとは違う自分をみんなに経験してほしい」</p>
-              <p>という想いが込められています。</p>
+              <p class="group-idea">「今までとは違う自分をみんなに経験してほしい」<br>という想いが込められています。</p>
+              <div class="group-meta-row">
+                <span>LEADER: MOEKO</span>
+                <span>LATEST: 排他的ファイター (2025.12.10)</span>
+              </div>
             </div>
             <div class="group-intro-bottom">
               <p class="member-label">メンバー</p>
@@ -85,13 +126,15 @@
               <a class="call-index-link" href="?view=releases&group=me">≠MEの作品を見る</a>
             </div>
           </article>
-          <article class="group-intro-card">
+          <article class="group-intro-card group-intro-card--joy group-intro-card--archive">
             <div class="group-intro-top">
+              <p class="group-year">結成 2022</p>
               <h3><span class="group-badge joy">≒JOY</span></h3>
-              <p>=LOVE・≠MEに続く第3のグループとして誕生したアイドルグループ。</p>
-              <p>グループ名には</p>
-              <p class="group-quote">「メンバーと応援してくださるファンの皆さんが出会ったときに喜びを感じて幸せな気持ちになってもらいたい」</p>
-              <p>という想いが込められています。</p>
+              <p class="group-idea">「メンバーと応援してくださるファンの皆さんが出会ったときに喜びを感じて幸せな気持ちになってもらいたい」<br>という想いが込められています。</p>
+              <div class="group-meta-row">
+                <span>LEADER: AIMI</span>
+                <span>LATEST: 「僕たちの歌」 (2026.04.03)</span>
+              </div>
             </div>
             <div class="group-intro-bottom">
               <p class="member-label">メンバー</p>
