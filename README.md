@@ -26,3 +26,4 @@ https://himeshimo.github.io/ikonoijoy-song-archive/
 
 ## 注意
 - まだ制作段階のため、情報の正確性に欠ける部分があります。あらかじめご了承ください。
+- コール(MIX)は現在最適な運用を試行錯誤中なので不完全です
