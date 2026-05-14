@@ -7,18 +7,82 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <header class="site-header">
+    <svg class="ui-icon-sprite" aria-hidden="true" focusable="false" width="0" height="0">
+      <symbol id="icon-disc" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.7" />
+        <circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.7" />
+        <path d="M17.8 8.4l1.9-1.2M5.2 15.6l-1.9 1.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+      </symbol>
+      <symbol id="icon-feather" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
+        <path d="M7 4.2v5.4M7 14.6v5.2M12 4.2v3.2M12 11.8v8M17 4.2v7.4M17 16.6v3.2" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+        <rect x="5.7" y="9.8" width="2.6" height="4.6" rx="0.9" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+        <rect x="10.7" y="7.6" width="2.6" height="4" rx="0.9" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+        <rect x="15.7" y="11.8" width="2.6" height="4.6" rx="0.9" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+      </symbol>
+      <symbol id="icon-megaphone" viewBox="0 0 24 24">
+        <path d="M3.8 11.3v1.4c0 .8.6 1.4 1.4 1.4h2.2l7.4 3.1a1 1 0 0 0 1.4-.9V7.7a1 1 0 0 0-1.4-.9L7.4 9.9H5.2c-.8 0-1.4.6-1.4 1.4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+        <path d="M16.5 9.1c1.8.7 3 2.1 3 3.9s-1.2 3.2-3 3.9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+      </symbol>
+      <symbol id="icon-note" viewBox="0 0 24 24">
+        <path d="M14.5 5.5v9.4a2.8 2.8 0 1 1-1.7-2.6V7.5l7-1.8v7.8a2.8 2.8 0 1 1-1.7-2.6V6.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="icon-creator-network" viewBox="0 0 24 24">
+        <path d="M2.8 12h3.3l2.2-3.2 2.6 7.1 2.4-5.1 2.1 1.9h3.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="2.8" cy="12" r="1.45" fill="none" stroke="currentColor" stroke-width="2" />
+        <circle cx="8.4" cy="8.8" r="1.45" fill="none" stroke="currentColor" stroke-width="2" />
+        <circle cx="16.2" cy="12.1" r="1.45" fill="none" stroke="currentColor" stroke-width="2" />
+        <circle cx="21.2" cy="12.1" r="1.45" fill="none" stroke="currentColor" stroke-width="2" />
+      </symbol>
+      <symbol id="icon-lyric-pen" viewBox="0 0 24 24">
+        <path d="M20.5 3.4c-2.2-.6-4.3.1-6.1 2l-8.9 8.9-1.2 5.3 5.3-1.2 8.9-8.9c1.7-1.8 2.4-3.9 2-6.1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+        <path d="M14.2 6.3l4.6 4.6M4.9 20.4h7.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <path d="M7.4 16.3l3 .9 1.1-2.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="icon-compose-staff" viewBox="0 0 24 24">
+        <path d="M2.2 8c2.9-2 6-3.2 9.4-3.5M2.2 11.1c2.9-1.5 6.1-2.3 9.5-2.3M2.2 14.3c2.7-1.3 5.5-1.9 8.6-1.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <path d="M13.8 4.1v10.1a2.5 2.5 0 1 1-2-2.4V6.9l6.8-1.8v8.4a2.5 2.5 0 1 1-2-2.4V6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+        <path d="M12.8 16c2 .8 4.1.8 6.1-.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </symbol>
+      <symbol id="icon-arrange-fader" viewBox="0 0 24 24">
+        <path d="M4.8 2.2v7.6M4.8 14.6v7.2M12 2.2v4.8M12 11.8v10M19.2 2.2v3M19.2 10v11.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <rect x="2.7" y="9.7" width="4.2" height="4.9" rx="1.2" fill="none" stroke="currentColor" stroke-width="2" />
+        <rect x="9.9" y="7" width="4.2" height="4.9" rx="1.2" fill="none" stroke="currentColor" stroke-width="2" />
+        <rect x="17.1" y="5.1" width="4.2" height="4.9" rx="1.2" fill="none" stroke="currentColor" stroke-width="2" />
+      </symbol>
+      <symbol id="icon-crown" viewBox="0 0 24 24">
+        <path d="M4 17.5h16l-1.7-8-4.5 3.2-1.8-4.3-1.8 4.3L5.7 9.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+        <path d="M4 17.5h16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+      </symbol>
+      <symbol id="icon-heart" viewBox="0 0 24 24">
+        <path d="M12 19.7l-1.3-1.1C6.1 14.6 3.5 12.3 3.5 9.2A4.2 4.2 0 0 1 7.8 5c1.6 0 3.1.8 4.2 2.1A5.4 5.4 0 0 1 16.2 5a4.2 4.2 0 0 1 4.3 4.2c0 3.1-2.6 5.4-7.2 9.4L12 19.7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="icon-gem" viewBox="0 0 24 24">
+        <path d="M5.2 9.1L8.3 5h7.4l3.1 4.1L12 19z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+        <path d="M5.2 9.1h13.6M8.3 5l3.7 4.1L15.7 5M12 9.1V19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="icon-spark" viewBox="0 0 24 24">
+        <path d="M12 4.5l1.7 4.2L18 10.4l-4.3 1.7L12 16.5l-1.7-4.4L6 10.4l4.3-1.7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="icon-link" viewBox="0 0 24 24">
+        <path d="M10.2 13.8l3.6-3.6M8.2 15.8l-1.8 1.8a3 3 0 1 1-4.2-4.2L4 11.6M15.8 8.2l1.8-1.8a3 3 0 1 1 4.2 4.2L20 12.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+      </symbol>
+    </svg>
+    <header class="site-header global-header">
       <a class="brand" href="?view=home" data-view-link="home">
-        <span class="brand-mark" aria-hidden="true"><span>🩷</span><span>💎</span><span>👑</span></span>
+        <span class="brand-mark" aria-hidden="true">
+          <svg class="ui-icon ui-icon--brand"><use href="#icon-heart"></use></svg>
+          <svg class="ui-icon ui-icon--brand ui-icon--brand-creator"><use href="#icon-gem"></use></svg>
+          <svg class="ui-icon ui-icon--brand"><use href="#icon-crown"></use></svg>
+        </span>
         <span>
           <strong>イコノイジョイ楽曲アーカイブ</strong>
           <small>Unofficial fan database</small>
         </span>
       </a>
       <nav class="nav" aria-label="メイン">
-        <a href="?view=releases" data-view-link="releases">作品</a>
-        <a href="?view=creators" data-view-link="creators">クリエイター</a>
-        <a href="?view=calls" data-view-link="calls">コール(MIX)</a>
+        <a href="?view=releases" data-view-link="releases"><span>作品</span></a>
+        <a href="?view=creators" data-view-link="creators"><span>クリエイター</span></a>
+        <a href="?view=calls" data-view-link="calls"><span>コール(MIX)</span></a>
         <button type="button" class="nav-search-trigger" id="searchModeTrigger" aria-label="検索を開く">検索 <kbd>⌘K</kbd></button>
       </nav>
     </header>
@@ -60,7 +124,7 @@
           <p class="eyebrow">SONG/CREATOR/LIVECALL ARCHIVE</p>
           <h1 class="hero-main-copy"><span class="hero-title-line1">イコノイジョイの楽曲を</span><br><span class="hero-title-line2"><span class="hero-main-mid hero-title-highlight">もっと深く</span>探せる</span><br><span class="hero-title-line3">作品・クリエイター・コールを一目で確認。ライブ前の確認から楽曲の深掘りまで。</span></h1>
           <div class="hero-tone-switch" role="group" aria-label="ヒーロー演出カラー">
-            <button type="button" class="hero-tone-button active" data-hero-tone="auto">すべて</button>
+            <button type="button" class="hero-tone-button active" data-hero-tone="auto">オフ</button>
             <button type="button" class="hero-tone-button" data-hero-tone="love">=LOVE</button>
             <button type="button" class="hero-tone-button" data-hero-tone="me">≠ME</button>
             <button type="button" class="hero-tone-button" data-hero-tone="joy">≒JOY</button>
@@ -77,15 +141,15 @@
         </div>
         <div class="home-quick-links">
           <a href="?view=releases" data-view-link="releases" class="home-link-card">
-            <strong>作品</strong>
+            <strong><svg class="ui-icon ui-icon--card" aria-hidden="true"><use href="#icon-disc"></use></svg><span>作品</span></strong>
             <small>シングル/アルバム/配信曲から探す</small>
           </a>
           <a href="?view=creators" data-view-link="creators" class="home-link-card">
-            <strong>クリエイター</strong>
+            <strong><svg class="ui-icon ui-icon--card" aria-hidden="true"><use href="#icon-feather"></use></svg><span>クリエイター</span></strong>
             <small>作詞/作曲/編曲と提供曲を見る</small>
           </a>
           <a href="?view=calls" data-view-link="calls" class="home-link-card">
-            <strong>コール(MIX)</strong>
+            <strong><svg class="ui-icon ui-icon--card" aria-hidden="true"><use href="#icon-megaphone"></use></svg><span>コール(MIX)</span></strong>
             <small>ライブ前のMIX/難易度を確認</small>
           </a>
         </div>
@@ -93,11 +157,11 @@
           <article class="group-intro-card group-intro-card--love group-intro-card--archive">
             <div class="group-intro-top">
               <p class="group-year">結成 2017</p>
-              <h3><span class="group-badge love">=LOVE</span></h3>
+              <h3><span class="group-badge group-archive-name love">=LOVE</span></h3>
               <p class="group-idea">「アイドルとはファンに愛されなければいけない。そしてアイドルという仕事も自分が愛さなければいけない。」<br>という想いが込められています。</p>
               <div class="group-meta-row">
-                <span>LEADER: ANNA</span>
-                <span>LATEST: 劇薬中毒 (2026.04.01)</span>
+                <span>LEADER: 山本杏奈</span>
+                <span id="homeLatestLove">LATEST: —</span>
               </div>
             </div>
             <div class="group-intro-bottom">
@@ -111,11 +175,11 @@
           <article class="group-intro-card group-intro-card--me group-intro-card--archive">
             <div class="group-intro-top">
               <p class="group-year">結成 2019</p>
-              <h3><span class="group-badge me">≠ME</span></h3>
+              <h3><span class="group-badge group-archive-name me">≠ME</span></h3>
               <p class="group-idea">「今までとは違う自分をみんなに経験してほしい」<br>という想いが込められています。</p>
               <div class="group-meta-row">
-                <span>LEADER: MOEKO</span>
-                <span>LATEST: 排他的ファイター (2025.12.10)</span>
+                <span>LEADER: 蟹沢萌子</span>
+                <span id="homeLatestMe">LATEST: —</span>
               </div>
             </div>
             <div class="group-intro-bottom">
@@ -129,11 +193,11 @@
           <article class="group-intro-card group-intro-card--joy group-intro-card--archive">
             <div class="group-intro-top">
               <p class="group-year">結成 2022</p>
-              <h3><span class="group-badge joy">≒JOY</span></h3>
+              <h3><span class="group-badge group-archive-name joy">≒JOY</span></h3>
               <p class="group-idea">「メンバーと応援してくださるファンの皆さんが出会ったときに喜びを感じて幸せな気持ちになってもらいたい」<br>という想いが込められています。</p>
               <div class="group-meta-row">
-                <span>LEADER: AIMI</span>
-                <span>LATEST: 「僕たちの歌」 (2026.04.03)</span>
+                <span>LEADER: 小澤愛実</span>
+                <span id="homeLatestJoy">LATEST: —</span>
               </div>
             </div>
             <div class="group-intro-bottom">
@@ -227,6 +291,9 @@
             <p class="eyebrow">Call Index</p>
             <h2>コール(MIX)あり楽曲</h2>
           </div>
+        </div>
+        <div class="call-maintenance-note" role="note" aria-label="コールデータ整備状況">
+          <p>コールデータは現在整備中です。一部楽曲は未対応ですが、順次追加・調整を行っています。</p>
         </div>
         <div class="release-tools">
           <label class="search-box release-search">

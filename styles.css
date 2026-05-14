@@ -83,6 +83,13 @@ body[data-accent="joy"] {
   --ui-accent-soft: rgba(251,191,36,0.16);
 }
 
+:root {
+  --group-love-rgb: 244,114,182;
+  --group-me-rgb: 52,211,153;
+  --group-joy-rgb: 251,191,36;
+  --group-all-rgb: 126,152,255;
+}
+
 main {
   padding-bottom: clamp(56px, 8vw, 104px);
 }
@@ -134,15 +141,73 @@ a:hover { text-decoration: underline; }
     radial-gradient(circle at 84% 72%, rgba(88,166,255,0.14) 0%, transparent 45%),
     var(--bg-2);
   box-shadow: var(--shadow-sm);
+  overflow: visible;
 }
 
-.brand-mark span {
-  font-size: 18px;
-  line-height: 1;
+.brand-mark .ui-icon--brand {
+  width: 15px;
+  height: 15px;
+  opacity: 0.92;
+}
+
+.brand-mark .ui-icon--brand:nth-child(1) {
+  color: rgba(248, 177, 214, 0.96);
+}
+
+.brand-mark .ui-icon--brand:nth-child(2) {
+  color: rgba(175, 206, 255, 0.94);
+}
+
+.brand-mark .ui-icon--brand:nth-child(3) {
+  color: rgba(255, 226, 153, 0.95);
+}
+
+/* brand creator icon: preserve feather silhouette */
+.brand-mark .ui-icon--brand-creator {
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  overflow: visible !important;
+  object-fit: contain;
+  aspect-ratio: auto !important;
+  transform: none !important;
+  stroke-width: 2.05 !important;
+  opacity: 0.9;
+}
+
+.brand-mark .ui-icon--brand-creator use {
+  overflow: visible;
 }
 
 .brand strong { display: block; font-size: 16px; font-weight: 900; line-height: 1.2; letter-spacing: -0.01em; white-space: nowrap; }
 .brand small  { display: block; font-size: 11px; color: var(--ink-2); margin-top: 3px; letter-spacing: 0.04em; }
+
+.ui-icon-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ui-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  flex: 0 0 auto;
+  color: currentColor;
+  stroke: currentColor;
+  pointer-events: none;
+  vertical-align: -2px;
+}
+
+.ui-icon--xxs { width: 11px; height: 11px; vertical-align: -1px; opacity: 0.9; }
+.ui-icon--xs { width: 12px; height: 12px; vertical-align: -1px; opacity: 0.9; }
+.ui-icon--nav { width: 14px; height: 14px; opacity: 0.86; }
+.ui-icon--section { width: 16px; height: 16px; vertical-align: -2px; opacity: 0.9; }
+.ui-icon--card { width: 14px; height: 14px; vertical-align: -1px; opacity: 0.86; }
 
 .nav {
   display: flex;
@@ -153,6 +218,9 @@ a:hover { text-decoration: underline; }
 }
 
 .nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 7px 13px;
   border-radius: 9px;
   border: 1px solid transparent;
@@ -165,6 +233,10 @@ a:hover { text-decoration: underline; }
 }
 .nav a:hover { color: var(--ink); background: var(--bg-3); border-color: var(--border); text-decoration: none; }
 .nav a.active { color: var(--ink); background: var(--bg-3); border-color: var(--border-2); box-shadow: 0 0 0 1px rgba(255,255,255,0.03) inset; }
+.nav a:hover .ui-icon,
+.nav a.active .ui-icon {
+  opacity: 1;
+}
 
 /* ================================================================
    ヒーロー
@@ -318,6 +390,9 @@ a:hover { text-decoration: underline; }
 }
 
 .home-link-card strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 15px;
   line-height: 1.3;
   color: var(--ink);
@@ -331,6 +406,10 @@ a:hover { text-decoration: underline; }
 
 .home-quick-links a:hover {
   border-color: var(--accent);
+}
+
+.home-quick-links a:hover .ui-icon--card {
+  opacity: 1;
 }
 
 #home .home-quick-links .home-link-card:nth-child(1):hover {
@@ -516,6 +595,104 @@ a:hover { text-decoration: underline; }
   background: var(--pink);
   border-color: var(--pink);
   color: #0d1117;
+}
+
+/* ================================================================
+   Group Filter Refresh (Releases / Calls)
+   ================================================================ */
+#releases .release-filters,
+#calls .call-filter-row .release-filters {
+  gap: 9px;
+}
+
+#releases .release-filters .filter-button[data-release-group],
+#calls .call-filter-row .release-filters .filter-button[data-call-group] {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* non-active: subtle tinted by group */
+#releases .release-filters .filter-button[data-release-group="all"]:not(.active),
+#calls .call-filter-row .release-filters .filter-button[data-call-group="all"]:not(.active) {
+  color: rgba(197, 214, 236, 0.92);
+  border-color: color-mix(in srgb, rgba(126, 152, 255, 0.36) 56%, var(--border) 44%);
+  background: color-mix(in srgb, rgba(126, 152, 255, 0.11) 24%, var(--bg-3) 76%);
+}
+
+#releases .release-filters .filter-button[data-release-group="love"]:not(.active),
+#calls .call-filter-row .release-filters .filter-button[data-call-group="love"]:not(.active) {
+  color: rgba(245, 204, 226, 0.92);
+  border-color: color-mix(in srgb, rgba(244, 114, 182, 0.4) 58%, var(--border) 42%);
+  background: color-mix(in srgb, rgba(244, 114, 182, 0.12) 24%, var(--bg-3) 76%);
+}
+
+#releases .release-filters .filter-button[data-release-group="me"]:not(.active),
+#calls .call-filter-row .release-filters .filter-button[data-call-group="me"]:not(.active) {
+  color: rgba(196, 236, 222, 0.92);
+  border-color: color-mix(in srgb, rgba(52, 211, 153, 0.4) 58%, var(--border) 42%);
+  background: color-mix(in srgb, rgba(52, 211, 153, 0.12) 24%, var(--bg-3) 76%);
+}
+
+#releases .release-filters .filter-button[data-release-group="joy"]:not(.active),
+#calls .call-filter-row .release-filters .filter-button[data-call-group="joy"]:not(.active) {
+  color: rgba(247, 227, 171, 0.94);
+  border-color: color-mix(in srgb, rgba(251, 191, 36, 0.42) 58%, var(--border) 42%);
+  background: color-mix(in srgb, rgba(251, 191, 36, 0.13) 24%, var(--bg-3) 76%);
+}
+
+#releases .release-filters .filter-button[data-release-group="allgroup"]:not(.active),
+#calls .call-filter-row .release-filters .filter-button[data-call-group="allgroup"]:not(.active) {
+  color: rgba(198, 214, 236, 0.92);
+  border-color: color-mix(in srgb, rgba(126, 152, 255, 0.38) 58%, var(--border) 42%);
+  background: color-mix(in srgb, rgba(126, 152, 255, 0.12) 24%, var(--bg-3) 76%);
+}
+
+/* hover: active未満の軽いaccent */
+#releases .release-filters .filter-button[data-release-group]:not(.active):hover,
+#calls .call-filter-row .release-filters .filter-button[data-call-group]:not(.active):hover {
+  color: #eef5ff;
+  border-color: color-mix(in srgb, currentColor 24%, var(--border-2) 76%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 14%, transparent);
+}
+
+/* active: clearer but still subtle */
+#releases .release-filters .filter-button[data-release-group="all"].active,
+#calls .call-filter-row .release-filters .filter-button[data-call-group="all"].active {
+  color: #f3f7ff;
+  border-color: rgba(126, 152, 255, 0.74);
+  background: color-mix(in srgb, rgba(126, 152, 255, 0.34) 36%, var(--bg-3) 64%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, rgba(126, 152, 255, 0.44) 46%, transparent);
+}
+
+#releases .release-filters .filter-button[data-release-group="love"].active,
+#calls .call-filter-row .release-filters .filter-button[data-call-group="love"].active {
+  color: rgb(255, 182, 220);
+  border-color: rgba(244, 114, 182, 0.82);
+  background: color-mix(in srgb, rgba(244, 114, 182, 0.3) 34%, var(--bg-3) 66%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, rgba(244, 114, 182, 0.44) 44%, transparent);
+}
+
+#releases .release-filters .filter-button[data-release-group="me"].active,
+#calls .call-filter-row .release-filters .filter-button[data-call-group="me"].active {
+  color: rgb(152, 233, 199);
+  border-color: rgba(52, 211, 153, 0.82);
+  background: color-mix(in srgb, rgba(52, 211, 153, 0.29) 34%, var(--bg-3) 66%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, rgba(52, 211, 153, 0.42) 44%, transparent);
+}
+
+#releases .release-filters .filter-button[data-release-group="joy"].active,
+#calls .call-filter-row .release-filters .filter-button[data-call-group="joy"].active {
+  color: rgb(255, 219, 132);
+  border-color: rgba(251, 191, 36, 0.84);
+  background: color-mix(in srgb, rgba(251, 191, 36, 0.3) 34%, var(--bg-3) 66%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, rgba(251, 191, 36, 0.42) 44%, transparent);
+}
+
+#releases .release-filters .filter-button[data-release-group="allgroup"].active,
+#calls .call-filter-row .release-filters .filter-button[data-call-group="allgroup"].active {
+  color: rgb(189, 208, 255);
+  border-color: rgba(126, 152, 255, 0.82);
+  background: color-mix(in srgb, rgba(126, 152, 255, 0.32) 34%, var(--bg-3) 66%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, rgba(126, 152, 255, 0.42) 44%, transparent);
 }
 
 /* ================================================================
@@ -866,6 +1043,8 @@ h2 {
 .release-card {
   display: flex;
   flex-direction: column;
+  position: relative;
+  isolation: isolate;
   gap: 8px;
   padding: 16px;
   background: var(--bg-2);
@@ -875,6 +1054,10 @@ h2 {
   align-self: stretch;
   height: 100%;
   min-height: 176px;
+}
+
+.release-card[data-release-key] {
+  cursor: pointer;
 }
 
 .release-card-head {
@@ -1244,6 +1427,9 @@ h2 {
    ================================================================ */
 .group-badge {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 11px;
@@ -1251,9 +1437,264 @@ h2 {
   letter-spacing: 0.02em;
 }
 
-.love  { background: var(--pink-dim);   color: var(--pink);   border: 1px solid rgba(244,114,182,0.3); }
-.me    { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(52,211,153,0.3);  }
-.joy   { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3);  }
+/* NOTE: avoid global .love/.me/.joy/.all styling collisions
+   Group color styles are scoped to explicit components below. */
+
+/* ================================================================
+   Group Accent System (cards/links/badges)
+   ================================================================ */
+.release-card,
+.song-card,
+.related-card,
+.release-title-link,
+.release-song-link,
+.group-badge {
+  transition: border-color 0.25s var(--ease), box-shadow 0.3s var(--ease), color 0.25s var(--ease), background-color 0.25s var(--ease), background 0.3s var(--ease), transform 0.18s var(--ease);
+}
+
+.release-card--group-love,
+.song-card--group-love,
+.related-card--group-love,
+.release-title-link--love,
+.release-song-link--love,
+.group-badge.love { --group-rgb: var(--group-love-rgb); }
+
+.release-card--group-me,
+.song-card--group-me,
+.related-card--group-me,
+.release-title-link--me,
+.release-song-link--me,
+.group-badge.me { --group-rgb: var(--group-me-rgb); }
+
+.release-card--group-joy,
+.song-card--group-joy,
+.related-card--group-joy,
+.release-title-link--joy,
+.release-song-link--joy,
+.group-badge.joy { --group-rgb: var(--group-joy-rgb); }
+
+.release-card--group-all,
+.song-card--group-all,
+.related-card--group-all,
+.release-title-link--all,
+.release-song-link--all,
+.group-badge.all { --group-rgb: var(--group-all-rgb); }
+
+.release-card[class*="release-card--group-"],
+.song-card[class*="song-card--group-"],
+.related-card[class*="related-card--group-"] {
+  border-color: color-mix(in srgb, rgba(var(--group-rgb, 126,152,255),0.3) 42%, var(--border) 58%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 20px rgba(6,10,20,0.28);
+}
+
+.release-card[class*="release-card--group-"]:hover,
+.song-card[class*="song-card--group-"]:hover,
+.related-card[class*="related-card--group-"]:hover {
+  border-color: rgba(var(--group-rgb, 126,152,255),0.58);
+  box-shadow: 0 12px 26px rgba(6,10,20,0.34), 0 0 0 1px rgba(var(--group-rgb, 126,152,255),0.18);
+}
+
+/* release cards: whole box should react to group color on hover */
+.release-card[class*="release-card--group-"]:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--group-rgb, 126,152,255),0.78);
+  background:
+    linear-gradient(160deg, rgba(var(--group-rgb, 126,152,255),0.14) 0%, rgba(13,18,29,0.92) 48%, rgba(11,16,27,0.98) 100%);
+  box-shadow:
+    0 15px 32px rgba(6,10,20,0.4),
+    0 0 0 1px rgba(var(--group-rgb, 126,152,255),0.3),
+    0 0 24px rgba(var(--group-rgb, 126,152,255),0.14);
+}
+
+.release-title-link h3,
+.release-song-link {
+  color: var(--ink);
+}
+
+.release-title-link[class*="release-title-link--"]:hover h3 {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.release-song-link[class*="release-song-link--"]:hover {
+  color: var(--ink);
+  border-color: rgba(var(--group-rgb, 126,152,255),0.54);
+  background: color-mix(in srgb, rgba(var(--group-rgb, 126,152,255),0.16) 76%, var(--bg-3) 24%);
+  text-decoration: none;
+}
+
+/* release title hover should not show long background band */
+.release-title-link:is(:hover, :focus-visible) {
+  background: transparent !important;
+  box-shadow: none !important;
+  text-decoration: none;
+}
+
+.release-title-link h3 {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* release card chips: keep song-group color at all times */
+.release-song-link--love {
+  color: #f6a7cf;
+}
+
+.release-song-link--me {
+  color: #8fe7c8;
+}
+
+.release-song-link--joy {
+  color: #f6d27a;
+}
+
+.release-song-link--all {
+  color: #b9cbff;
+}
+
+.release-song-link--love:is(:hover, :focus-visible) {
+  color: #ffd2e8;
+  border-color: rgba(244,114,182,0.56);
+  background: rgba(244,114,182,0.16);
+}
+
+.release-song-link--me:is(:hover, :focus-visible) {
+  color: #d2fff0;
+  border-color: rgba(52,211,153,0.54);
+  background: rgba(52,211,153,0.14);
+}
+
+.release-song-link--joy:is(:hover, :focus-visible) {
+  color: #ffe8ab;
+  border-color: rgba(251,191,36,0.56);
+  background: rgba(251,191,36,0.16);
+}
+
+.release-song-link--all:is(:hover, :focus-visible) {
+  color: #d9e2ff;
+  border-color: rgba(126,152,255,0.56);
+  background: rgba(126,152,255,0.16);
+}
+
+.group-badge.love,
+.group-badge.me,
+.group-badge.joy,
+.group-badge.all {
+  box-shadow: inset 0 0 0 1px rgba(var(--group-rgb, 126,152,255),0.08);
+}
+
+/* group badge: default white text + group border, on hover text becomes group color */
+.group-badge.love { color: #f2f6ff !important; background: rgba(244,114,182,0.16) !important; border-color: rgba(244,114,182,0.50) !important; }
+.group-badge.me { color: #f2f6ff !important; background: rgba(52,211,153,0.14) !important; border-color: rgba(52,211,153,0.48) !important; }
+.group-badge.joy { color: #f2f6ff !important; background: rgba(251,191,36,0.16) !important; border-color: rgba(251,191,36,0.50) !important; }
+.group-badge.all { color: #f2f6ff !important; background: rgba(126,152,255,0.16) !important; border-color: rgba(126,152,255,0.50) !important; }
+
+/* enforce white badge text in cards/lists by default */
+.release-card .group-badge,
+.song-card .group-badge,
+.related-card .group-badge,
+.creator-song-item .group-badge,
+.song-search-card .group-badge,
+.call-pattern-song .group-badge,
+.call-beginner-song .group-badge {
+  color: #f2f6ff !important;
+}
+
+.song-card:hover .group-badge.love,
+.related-card:hover .group-badge.love,
+.creator-song-item:hover .group-badge.love,
+.search-mode-item:hover .group-badge.love,
+.release-card:hover .group-badge.love {
+  color: var(--pink) !important;
+}
+
+.song-card:hover .group-badge.me,
+.related-card:hover .group-badge.me,
+.creator-song-item:hover .group-badge.me,
+.search-mode-item:hover .group-badge.me,
+.release-card:hover .group-badge.me {
+  color: var(--green) !important;
+}
+
+.song-card:hover .group-badge.joy,
+.related-card:hover .group-badge.joy,
+.creator-song-item:hover .group-badge.joy,
+.search-mode-item:hover .group-badge.joy,
+.release-card:hover .group-badge.joy {
+  color: var(--yellow) !important;
+}
+
+.song-card:hover .group-badge.all,
+.related-card:hover .group-badge.all,
+.creator-song-item:hover .group-badge.all,
+.search-mode-item:hover .group-badge.all,
+.release-card:hover .group-badge.all {
+  color: #b8c7ff !important;
+}
+
+.song-card:hover .group-badge,
+.related-card:hover .group-badge,
+.creator-song-item:hover .group-badge,
+.search-mode-item:hover .group-badge {
+  filter: saturate(1.06) brightness(1.03);
+}
+
+.song-card-title-link:hover h3 {
+  color: var(--ink);
+}
+
+.related-card[class*="related-card--group-"]:hover .related-title {
+  color: var(--ink);
+}
+
+/* group-colored title hover/focus (normal state stays white) */
+.release-card--group-love .release-title-link:is(:hover, :focus-visible) h3,
+.release-card--group-love .release-song-link:is(:hover, :focus-visible),
+.song-card--group-love .song-card-title-link:is(:hover, :focus-visible) h3,
+.song-search-card--group-love .song-card-title-link:is(:hover, :focus-visible) h3,
+.related-card--group-love:is(:hover, :focus-visible) .related-title,
+.creator-song-item--group-love .creator-song-link:is(:hover, :focus-visible),
+.search-mode-item[data-group="love"]:is(:hover, :focus-visible) .search-mode-item-title,
+.detail-release-link--love:is(:hover, :focus-visible) {
+  color: var(--pink);
+  text-shadow: 0 0 10px rgba(244,114,182,0.18);
+}
+
+.release-card--group-me .release-title-link:is(:hover, :focus-visible) h3,
+.release-card--group-me .release-song-link:is(:hover, :focus-visible),
+.song-card--group-me .song-card-title-link:is(:hover, :focus-visible) h3,
+.song-search-card--group-me .song-card-title-link:is(:hover, :focus-visible) h3,
+.related-card--group-me:is(:hover, :focus-visible) .related-title,
+.creator-song-item--group-me .creator-song-link:is(:hover, :focus-visible),
+.search-mode-item[data-group="me"]:is(:hover, :focus-visible) .search-mode-item-title,
+.detail-release-link--me:is(:hover, :focus-visible) {
+  color: var(--green);
+  text-shadow: 0 0 10px rgba(52,211,153,0.16);
+}
+
+.release-card--group-joy .release-title-link:is(:hover, :focus-visible) h3,
+.release-card--group-joy .release-song-link:is(:hover, :focus-visible),
+.song-card--group-joy .song-card-title-link:is(:hover, :focus-visible) h3,
+.song-search-card--group-joy .song-card-title-link:is(:hover, :focus-visible) h3,
+.related-card--group-joy:is(:hover, :focus-visible) .related-title,
+.creator-song-item--group-joy .creator-song-link:is(:hover, :focus-visible),
+.search-mode-item[data-group="joy"]:is(:hover, :focus-visible) .search-mode-item-title,
+.detail-release-link--joy:is(:hover, :focus-visible) {
+  color: var(--yellow);
+  text-shadow: 0 0 10px rgba(251,191,36,0.17);
+}
+
+.release-card--group-all .release-title-link:is(:hover, :focus-visible) h3,
+.release-card--group-all .release-song-link:is(:hover, :focus-visible),
+.song-card--group-all .song-card-title-link:is(:hover, :focus-visible) h3,
+.song-search-card--group-all .song-card-title-link:is(:hover, :focus-visible) h3,
+.related-card--group-all:is(:hover, :focus-visible) .related-title,
+.creator-song-item--group-all .creator-song-link:is(:hover, :focus-visible),
+.search-mode-item[data-group="all"]:is(:hover, :focus-visible) .search-mode-item-title,
+.detail-release-link--all:is(:hover, :focus-visible) {
+  color: #a9c3ff;
+  text-shadow: 0 0 10px rgba(126,152,255,0.16);
+}
 
 /* ================================================================
    タグ・MIXタグ
@@ -1451,6 +1892,110 @@ a.mix-tag:hover {
   text-decoration: none;
   border-color: var(--accent);
   color: var(--ink);
+}
+
+/* creator song chips: unify with release-song chip language */
+.creator-song-chip,
+.creator-song-item .creator-song-link,
+.creator-detail-view .creator-collab-song,
+.creator-detail-view .creator-timeline-title {
+  border-radius: 999px;
+  border: 1px solid rgba(138, 159, 191, 0.26);
+  background: rgba(16, 24, 37, 0.72);
+  color: #e8f0fb;
+  text-decoration: none;
+  transition:
+    color var(--accent-transition),
+    border-color var(--accent-transition),
+    background var(--accent-transition),
+    box-shadow var(--accent-transition),
+    transform 0.15s var(--ease);
+}
+
+.creator-song-item .creator-song-link,
+.creator-detail-view .creator-timeline-title {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.creator-song-item .creator-song-link:hover,
+.creator-song-item .creator-song-link:focus-visible,
+.creator-detail-view .creator-timeline-item:hover .creator-timeline-title {
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.creator-song-chip--love,
+.creator-song-item--group-love .creator-song-link,
+.creator-collab-song--love,
+.creator-timeline-title--love {
+  border-color: rgba(244,114,182,0.38);
+  background: rgba(244,114,182,0.12);
+}
+
+.creator-song-chip--me,
+.creator-song-item--group-me .creator-song-link,
+.creator-collab-song--me,
+.creator-timeline-title--me {
+  border-color: rgba(52,211,153,0.36);
+  background: rgba(52,211,153,0.11);
+}
+
+.creator-song-chip--joy,
+.creator-song-item--group-joy .creator-song-link,
+.creator-collab-song--joy,
+.creator-timeline-title--joy {
+  border-color: rgba(251,191,36,0.38);
+  background: rgba(251,191,36,0.12);
+}
+
+.creator-song-chip--all,
+.creator-song-item--group-all .creator-song-link,
+.creator-collab-song--all,
+.creator-timeline-title--all {
+  border-color: rgba(126,152,255,0.4);
+  background: rgba(126,152,255,0.12);
+}
+
+.creator-song-chip--love:hover,
+.creator-song-item--group-love .creator-song-link:hover,
+.creator-song-item--group-love .creator-song-link:focus-visible,
+.creator-detail-view .creator-timeline-item--group-love:hover .creator-timeline-title {
+  color: var(--pink);
+  border-color: rgba(244,114,182,0.62);
+  box-shadow: 0 0 0 2px rgba(244,114,182,0.12);
+}
+
+.creator-song-chip--me:hover,
+.creator-song-item--group-me .creator-song-link:hover,
+.creator-song-item--group-me .creator-song-link:focus-visible,
+.creator-detail-view .creator-timeline-item--group-me:hover .creator-timeline-title {
+  color: var(--green);
+  border-color: rgba(52,211,153,0.6);
+  box-shadow: 0 0 0 2px rgba(52,211,153,0.11);
+}
+
+.creator-song-chip--joy:hover,
+.creator-song-item--group-joy .creator-song-link:hover,
+.creator-song-item--group-joy .creator-song-link:focus-visible,
+.creator-detail-view .creator-timeline-item--group-joy:hover .creator-timeline-title {
+  color: var(--yellow);
+  border-color: rgba(251,191,36,0.62);
+  box-shadow: 0 0 0 2px rgba(251,191,36,0.12);
+}
+
+.creator-song-chip--all:hover,
+.creator-song-item--group-all .creator-song-link:hover,
+.creator-song-item--group-all .creator-song-link:focus-visible,
+.creator-detail-view .creator-timeline-item--group-all:hover .creator-timeline-title {
+  color: #c0ceff;
+  border-color: rgba(126,152,255,0.64);
+  box-shadow: 0 0 0 2px rgba(126,152,255,0.12);
 }
 
 .creator-link { color: var(--ink); text-decoration: none; }
@@ -2042,6 +2587,38 @@ a.mix-tag:hover {
   border-bottom: 1px solid var(--border);
 }
 
+.detail-related h2 .section-kicker,
+.detail-release-songs h2 .section-kicker,
+.creator-collab-section h2 .section-kicker,
+.creator-timeline-section h2 .section-kicker {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(204, 216, 235, 0.52);
+}
+
+/* section heading: icon as left marker (single-row, left-aligned) */
+.section-heading-inline {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+}
+
+.section-heading-inline .ui-icon {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  flex: 0 0 16px !important;
+  opacity: 0.82 !important;
+  stroke-width: 2 !important;
+  transform: translateY(0.5px);
+}
+
 .credits-list { display: grid; gap: 10px; }
 
 .credits-list > div {
@@ -2067,6 +2644,8 @@ a.mix-tag:hover {
 
 .related-card {
   display: flex;
+  position: relative;
+  isolation: isolate;
   align-items: center;
   gap: 8px;
   padding: 9px 12px;
@@ -2819,14 +3398,21 @@ body[data-accent="joy"] {
   color: #b2bdd1;
 }
 
-#home .group-intro-card--archive .group-badge {
+#home .group-intro-card--archive .group-badge,
+#home .group-intro-card--archive .group-archive-name {
   font-size: 32px;
   font-weight: 900;
-  border: 0;
-  background: transparent;
+  border: 0 !important;
+  background: transparent !important;
   padding: 0;
   letter-spacing: -0.01em;
+  min-height: 0;
+  box-shadow: none !important;
 }
+
+#home .group-intro-card--archive .group-archive-name.love { color: var(--pink) !important; }
+#home .group-intro-card--archive .group-archive-name.me { color: var(--green) !important; }
+#home .group-intro-card--archive .group-archive-name.joy { color: var(--yellow) !important; }
 
 #home .group-idea {
   margin: 0;
@@ -3080,6 +3666,42 @@ body[data-accent="joy"] {
   background: rgba(62,48,16,0.52);
 }
 
+/* CTA direct hover accent */
+#home .group-intro-card--love .call-index-link:hover,
+#home .group-intro-card--love .call-index-link:focus-visible {
+  border-color: rgba(244,114,182,0.6);
+  box-shadow: 0 0 0 3px rgba(244,114,182,0.12);
+  background: rgba(56,22,42,0.56);
+  color: rgba(255, 200, 229, 0.96);
+}
+
+#home .group-intro-card--me .call-index-link:hover,
+#home .group-intro-card--me .call-index-link:focus-visible {
+  border-color: rgba(52,211,153,0.58);
+  box-shadow: 0 0 0 3px rgba(52,211,153,0.12);
+  background: rgba(16,52,39,0.56);
+  color: rgba(193, 244, 221, 0.96);
+}
+
+#home .group-intro-card--joy .call-index-link:hover,
+#home .group-intro-card--joy .call-index-link:focus-visible {
+  border-color: rgba(251,191,36,0.6);
+  box-shadow: 0 0 0 3px rgba(251,191,36,0.12);
+  background: rgba(62,48,16,0.56);
+  color: rgba(255, 233, 176, 0.97);
+}
+
+/* card hover連動でもCTA文字にgroup accentを出す */
+#home .group-intro-card--love:hover .call-index-link {
+  color: rgba(255, 200, 229, 0.96);
+}
+#home .group-intro-card--me:hover .call-index-link {
+  color: rgba(193, 244, 221, 0.96);
+}
+#home .group-intro-card--joy:hover .call-index-link {
+  color: rgba(255, 233, 176, 0.97);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .group-intro-card,
   .group-intro-card:hover,
@@ -3095,6 +3717,7 @@ body[data-accent="joy"] {
    ================================================================ */
 .detail-view {
   position: relative;
+  isolation: isolate;
   max-width: 1120px;
   margin: 0 auto;
   padding: clamp(20px, 4vw, 36px) clamp(16px, 4vw, 32px) clamp(56px, 8vw, 96px);
@@ -3142,6 +3765,609 @@ body[data-accent="joy"] {
   text-wrap: balance;
   overflow-wrap: anywhere;
   color: #eff5ff;
+}
+
+.detail-meta {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+  color: #9fb0c8;
+  text-transform: uppercase;
+}
+
+.creator-detail-stats {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.creator-detail-stats .tag {
+  border-color: color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 42%, var(--border));
+  background: color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 30%, rgba(14, 20, 31, 0.84));
+}
+
+.creator-detail-stats .creator-group-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 10px;
+  transition: border-color var(--accent-transition), background var(--accent-transition), color var(--accent-transition), box-shadow var(--accent-transition);
+}
+
+.creator-group-stat-name {
+  color: #d9e6f7;
+  font-weight: 700;
+}
+
+.creator-group-stat-count {
+  color: #9db0c8;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.creator-group-stat--love {
+  border-color: color-mix(in srgb, rgba(244, 114, 182, 0.38) 58%, var(--border) 42%);
+  background: color-mix(in srgb, rgba(244, 114, 182, 0.16) 28%, rgba(14, 20, 31, 0.84) 72%);
+}
+
+.creator-group-stat--me {
+  border-color: color-mix(in srgb, rgba(52, 211, 153, 0.38) 58%, var(--border) 42%);
+  background: color-mix(in srgb, rgba(52, 211, 153, 0.16) 28%, rgba(14, 20, 31, 0.84) 72%);
+}
+
+.creator-group-stat--joy {
+  border-color: color-mix(in srgb, rgba(251, 191, 36, 0.4) 58%, var(--border) 42%);
+  background: color-mix(in srgb, rgba(251, 191, 36, 0.17) 28%, rgba(14, 20, 31, 0.84) 72%);
+}
+
+.creator-group-stat--all {
+  border-color: color-mix(in srgb, rgba(126, 152, 255, 0.38) 58%, var(--border) 42%);
+  background: color-mix(in srgb, rgba(126, 152, 255, 0.15) 28%, rgba(14, 20, 31, 0.84) 72%);
+}
+
+.creator-group-stat:hover {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 46%, transparent);
+}
+
+.creator-detail-view .creator-detail-hero {
+  border-color: color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 58%, var(--border));
+  background:
+    linear-gradient(155deg, rgba(21, 28, 40, 0.9), rgba(12, 17, 28, 0.92)),
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 38%, transparent) 0%, transparent 52%);
+}
+
+.creator-detail-view .creator-detail-role-row {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.creator-detail-view .creator-role-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 44%, var(--border));
+  background: rgba(13, 19, 30, 0.74);
+  color: #b9c9de;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.creator-detail-view .creator-song-item {
+  border-radius: 13px;
+  border: 1px solid color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 30%, var(--border));
+  background: linear-gradient(155deg, rgba(25, 33, 47, 0.82), rgba(14, 21, 34, 0.88));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  padding: 12px 12px 11px;
+  transition: border-color var(--accent-transition), box-shadow var(--accent-transition), background var(--accent-transition), transform 0.16s var(--ease);
+}
+
+.creator-detail-view .creator-song-item:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ui-accent, #58a6ff) 44%, var(--border));
+  box-shadow: 0 10px 24px rgba(0,0,0,0.26), 0 0 0 1px color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 42%, transparent);
+}
+
+.creator-detail-view .creator-song-item--group-love {
+  border-color: color-mix(in srgb, rgba(244,114,182,0.34) 58%, var(--border) 42%);
+}
+
+.creator-detail-view .creator-song-item--group-me {
+  border-color: color-mix(in srgb, rgba(52,211,153,0.34) 58%, var(--border) 42%);
+}
+
+.creator-detail-view .creator-song-item--group-joy {
+  border-color: color-mix(in srgb, rgba(251,191,36,0.36) 58%, var(--border) 42%);
+}
+
+.creator-detail-view .creator-song-item--group-all {
+  border-color: color-mix(in srgb, rgba(126,152,255,0.36) 58%, var(--border) 42%);
+}
+
+.creator-detail-view .creator-song-item--group-love:hover {
+  border-color: rgba(244,114,182,0.62);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.26), 0 0 0 1px rgba(244,114,182,0.2);
+}
+
+.creator-detail-view .creator-song-item--group-me:hover {
+  border-color: rgba(52,211,153,0.6);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.26), 0 0 0 1px rgba(52,211,153,0.2);
+}
+
+.creator-detail-view .creator-song-item--group-joy:hover {
+  border-color: rgba(251,191,36,0.62);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.26), 0 0 0 1px rgba(251,191,36,0.21);
+}
+
+.creator-detail-view .creator-song-item--group-all:hover {
+  border-color: rgba(126,152,255,0.64);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.26), 0 0 0 1px rgba(126,152,255,0.2);
+}
+
+.creator-detail-view .creator-song-meta {
+  margin: 6px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  color: #9caec8;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.creator-detail-view .creator-song-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.creator-detail-view .creator-song-meta span + span::before {
+  content: "•";
+  color: #6f829d;
+  margin-right: 4px;
+}
+
+.creator-detail-view .creator-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.creator-detail-view .creator-detail-head-main {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.creator-detail-view .creator-detail-count {
+  margin: 0;
+  color: #9cb0ca;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-left: auto;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.creator-detail-view [data-creator-archive-toggle] {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  width: auto;
+  max-width: max-content;
+  min-height: 32px;
+  padding: 0 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(180deg, rgba(33, 44, 62, 0.7), rgba(16, 23, 36, 0.72));
+  color: rgba(232, 242, 255, 0.9);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease, color 200ms ease;
+}
+
+.creator-detail-view [data-creator-archive-toggle]:hover,
+.creator-detail-view [data-creator-archive-toggle]:focus-visible {
+  border-color: color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 58%, rgba(255, 255, 255, 0.24));
+  background: linear-gradient(180deg, rgba(40, 54, 76, 0.72), rgba(18, 27, 43, 0.74));
+  color: #f2f7ff;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 35%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.creator-detail-view [data-creator-archive-toggle][data-state="closed"] {
+  border-color: rgba(143, 164, 192, 0.3);
+  color: rgba(201, 217, 238, 0.95);
+}
+
+.creator-detail-view .creator-detail-filters {
+  margin: 10px 0 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.creator-detail-view .creator-archive-section.is-collapsed .creator-detail-filters,
+.creator-detail-view .creator-archive-section.is-collapsed #creatorDetailSongList,
+.creator-detail-view .creator-archive-section.is-collapsed #creatorDetailSongList {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .creator-detail-view .creator-detail-head {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+  .creator-detail-view .creator-detail-count {
+    width: 100%;
+    text-align: right;
+  }
+}
+
+.creator-detail-view .creator-filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+
+.creator-detail-view .creator-filter-row--sort {
+  padding-top: 2px;
+}
+
+.creator-detail-view .creator-filter-label {
+  color: #95a9c3;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.creator-detail-view .creator-filter-pills {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.creator-detail-view .creator-filter-row .release-filter,
+.creator-detail-view .creator-filter-row .release-switch {
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(150, 168, 196, 0.22);
+  background: linear-gradient(160deg, rgba(23, 31, 45, 0.72), rgba(15, 22, 34, 0.82));
+  color: rgba(223, 233, 247, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition:
+    color var(--accent-transition),
+    border-color var(--accent-transition),
+    background var(--accent-transition),
+    box-shadow var(--accent-transition);
+}
+
+.creator-detail-view .creator-filter-row .release-filter:hover,
+.creator-detail-view .creator-filter-row .release-switch:hover,
+.creator-detail-view .creator-filter-row .release-filter:focus-visible,
+.creator-detail-view .creator-filter-row .release-switch:focus-visible {
+  border-color: rgba(170, 190, 220, 0.34);
+  background: linear-gradient(160deg, rgba(31, 40, 56, 0.8), rgba(18, 26, 40, 0.9));
+  color: rgba(238, 246, 255, 0.92);
+  box-shadow: 0 0 0 2px rgba(132, 164, 212, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.creator-detail-view .creator-filter-row .release-filter.active,
+.creator-detail-view .creator-filter-row .release-switch.active {
+  border-color: color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 54%, rgba(173, 195, 231, 0.28));
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 44%, rgba(26, 35, 50, 0.78)),
+    color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 24%, rgba(16, 24, 37, 0.88))
+  );
+  color: rgba(241, 248, 255, 0.96);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 32%, transparent);
+}
+
+.creator-detail-view .creator-filter-row .release-filter.filter-love:not(.active) {
+  border-color: rgba(244,114,182,0.34);
+  color: rgba(244,114,182,0.86);
+  background: linear-gradient(160deg, rgba(44, 24, 37, 0.6), rgba(20, 18, 30, 0.78));
+}
+
+.creator-detail-view .creator-filter-row .release-filter.filter-me:not(.active) {
+  border-color: rgba(52,211,153,0.32);
+  color: rgba(115, 235, 187, 0.88);
+  background: linear-gradient(160deg, rgba(20, 41, 35, 0.6), rgba(15, 23, 30, 0.8));
+}
+
+.creator-detail-view .creator-filter-row .release-filter.filter-joy:not(.active) {
+  border-color: rgba(251,191,36,0.34);
+  color: rgba(249, 210, 110, 0.9);
+  background: linear-gradient(160deg, rgba(46, 37, 16, 0.62), rgba(21, 20, 28, 0.8));
+}
+
+.creator-detail-view .creator-filter-row .release-filter.filter-allgroup:not(.active) {
+  border-color: rgba(126,152,255,0.36);
+  color: rgba(186,206,255,0.9);
+  background: linear-gradient(160deg, rgba(24, 30, 50, 0.64), rgba(16, 21, 34, 0.82));
+}
+
+.creator-detail-view .creator-filter-row .release-filter.filter-love.active {
+  border-color: rgba(244, 114, 182, 0.52);
+  box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.14);
+}
+
+.creator-detail-view .creator-filter-row .release-filter.filter-me.active {
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.13);
+}
+
+.creator-detail-view .creator-filter-row .release-filter.filter-joy.active {
+  border-color: rgba(251, 191, 36, 0.52);
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.14);
+}
+
+.creator-detail-view .creator-filter-row .release-filter.filter-allgroup.active {
+  border-color: rgba(126, 152, 255, 0.54);
+  box-shadow: 0 0 0 2px rgba(126, 152, 255, 0.14);
+}
+
+.creator-detail-view .creator-collab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.creator-detail-view .creator-collab-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 30%, var(--border));
+  background: linear-gradient(156deg, rgba(24, 33, 48, 0.78), rgba(14, 21, 34, 0.88));
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition:
+    border-color var(--accent-transition),
+    box-shadow var(--accent-transition),
+    background var(--accent-transition),
+    transform 0.18s var(--ease),
+    color var(--accent-transition);
+}
+
+.creator-detail-view .creator-collab-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ui-accent, #58a6ff) 46%, var(--border));
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28), 0 0 0 1px color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 46%, transparent);
+  text-decoration: none;
+}
+
+.creator-detail-view .creator-collab-card:hover .creator-collab-head strong {
+  color: color-mix(in srgb, var(--ui-accent, #58a6ff) 62%, #f4f8ff);
+}
+
+.creator-detail-view .creator-collab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.creator-detail-view .creator-collab-head strong {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #eef5ff;
+}
+
+.creator-detail-view .creator-collab-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.creator-detail-view .creator-collab-role {
+  display: inline-flex;
+  align-items: center;
+  min-height: 21px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 160, 193, 0.28);
+  background: rgba(15, 23, 36, 0.72);
+  color: #a8bad4;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.creator-detail-view .creator-collab-songs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.creator-detail-view .creator-collab-song {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.creator-detail-view .creator-timeline {
+  display: grid;
+  gap: 10px;
+}
+
+.creator-detail-view .creator-timeline-year {
+  position: relative;
+  padding-left: 14px;
+}
+
+.creator-detail-view .creator-timeline-year::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  bottom: 2px;
+  width: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 64%, rgba(158, 181, 214, 0.36)),
+    rgba(88, 106, 136, 0.16)
+  );
+}
+
+.creator-detail-view .creator-timeline-year-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.creator-detail-view .creator-timeline-year-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #e8f0fb;
+}
+
+.creator-detail-view .creator-timeline-songs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.creator-detail-view .creator-timeline-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 0 1 300px;
+  max-width: 340px;
+  min-width: 220px;
+  padding: 7px 10px 7px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(130, 150, 182, 0.2);
+  background: rgba(14, 21, 33, 0.64);
+}
+
+.creator-detail-view .creator-timeline-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(140, 160, 196, 0.38);
+}
+
+.creator-detail-view .creator-timeline-item--group-love::before {
+  background: rgba(244, 114, 182, 0.72);
+}
+
+.creator-detail-view .creator-timeline-item--group-me::before {
+  background: rgba(52, 211, 153, 0.74);
+}
+
+.creator-detail-view .creator-timeline-item--group-joy::before {
+  background: rgba(251, 191, 36, 0.76);
+}
+
+.creator-detail-view .creator-timeline-item--group-all::before {
+  background: rgba(126, 152, 255, 0.72);
+}
+
+.creator-detail-view .creator-timeline-body {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  flex: 1 1 auto;
+}
+
+.creator-detail-view .creator-timeline-title {
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #dce7f7;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.creator-detail-view .creator-timeline-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 7px;
+  font-size: 10.5px;
+  color: #8ea2bf;
+}
+
+.creator-detail-view .creator-timeline-meta span + span::before {
+  content: "•";
+  color: #6f829d;
+  margin-right: 4px;
+}
+
+/* timeline badge: prevent shape collapse */
+.creator-detail-view .creator-timeline-item .group-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  min-height: 20px;
+  height: 20px;
+  padding: 0 7px;
+  line-height: 1;
+  font-size: 10px;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+
+@media (max-width: 720px) {
+  .creator-detail-view .creator-timeline-item {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+.creator-detail-view .creator-timeline-controls {
+  margin-top: 2px;
+  flex: 1 1 100%;
+}
+
+.creator-detail-view .creator-timeline-controls .back-link--mini {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+@media (max-width: 680px) {
+  .creator-detail-view .creator-detail-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
 }
 
 .detail-call-jump {
@@ -3507,3 +4733,2139 @@ body[data-accent="joy"] {
     grid-template-columns: 1fr;
   }
 }
+
+/* ================================================================
+   Release UI Final Overrides (force-apply)
+   ================================================================ */
+#releases .release-title-link,
+#releases .release-title-link:is(:hover, :focus-visible),
+#releases .release-title-link h3,
+#releases .release-title-link:is(:hover, :focus-visible) h3 {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#releases .release-title-link:is(:hover, :focus-visible) h3 {
+  text-decoration: none !important;
+}
+
+#releases .group-badge.love,
+#releases .group-badge.me,
+#releases .group-badge.joy,
+#releases .group-badge.all {
+  color: #f2f6ff !important;
+}
+
+#releases .group-badge.love {
+  border-color: rgba(244,114,182,0.50) !important;
+  background: rgba(244,114,182,0.16) !important;
+}
+
+#releases .group-badge.me {
+  border-color: rgba(52,211,153,0.48) !important;
+  background: rgba(52,211,153,0.14) !important;
+}
+
+#releases .group-badge.joy {
+  border-color: rgba(251,191,36,0.50) !important;
+  background: rgba(251,191,36,0.16) !important;
+}
+
+#releases .group-badge.all {
+  border-color: rgba(126,152,255,0.50) !important;
+  background: rgba(126,152,255,0.16) !important;
+}
+
+#releases .release-card:hover .group-badge.love { color: var(--pink) !important; }
+#releases .release-card:hover .group-badge.me { color: var(--green) !important; }
+#releases .release-card:hover .group-badge.joy { color: var(--yellow) !important; }
+#releases .release-card:hover .group-badge.all { color: #b8c7ff !important; }
+
+/* defensive: decorative layers must never block click */
+.release-card::before,
+.release-card::after,
+.related-card::before,
+.related-card::after,
+.related-card--discover::before,
+.related-card--discover::after,
+.detail-view::before {
+  pointer-events: none;
+  z-index: 0;
+}
+
+.release-title-link,
+.release-song-link,
+.song-card-title-link,
+.creator-song-link,
+.related-card,
+.detail-release-link {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.release-card > *,
+.related-card > *,
+.related-card--discover > *,
+.detail-view > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ================================================================
+   Phase 1-1: Song Detail Group Synced UI (scoped)
+   ================================================================ */
+.detail-view[data-song-group="love"]::before {
+  background:
+    radial-gradient(ellipse 66% 82% at 8% 24%, rgba(244,114,182,0.2) 0%, transparent 72%),
+    radial-gradient(ellipse 46% 62% at 88% 4%, rgba(184,112,255,0.12) 0%, transparent 72%);
+}
+
+.detail-view[data-song-group="me"]::before {
+  background:
+    radial-gradient(ellipse 66% 82% at 8% 24%, rgba(52,211,153,0.2) 0%, transparent 72%),
+    radial-gradient(ellipse 46% 62% at 88% 4%, rgba(74,222,128,0.12) 0%, transparent 72%);
+}
+
+.detail-view[data-song-group="joy"]::before {
+  background:
+    radial-gradient(ellipse 66% 82% at 8% 24%, rgba(251,191,36,0.2) 0%, transparent 72%),
+    radial-gradient(ellipse 46% 62% at 88% 4%, rgba(250,204,21,0.12) 0%, transparent 72%);
+}
+
+.detail-view[data-song-group="all"]::before {
+  background:
+    radial-gradient(ellipse 66% 82% at 8% 24%, rgba(126,152,255,0.18) 0%, transparent 72%),
+    radial-gradient(ellipse 46% 62% at 88% 4%, rgba(88,166,255,0.1) 0%, transparent 72%);
+}
+
+/* detail page group badges: white outline style */
+.detail-view .group-badge.love {
+  color: #f6f9ff !important;
+  border-color: rgba(246,249,255,0.58) !important;
+  background: rgba(17,24,36,0.46) !important;
+}
+
+.detail-view .group-badge.me {
+  color: #f6f9ff !important;
+  border-color: rgba(246,249,255,0.58) !important;
+  background: rgba(17,24,36,0.46) !important;
+}
+
+.detail-view .group-badge.joy {
+  color: #f6f9ff !important;
+  border-color: rgba(246,249,255,0.58) !important;
+  background: rgba(17,24,36,0.46) !important;
+}
+
+.detail-view .group-badge.all {
+  color: #f6f9ff !important;
+  border-color: rgba(246,249,255,0.58) !important;
+  background: rgba(17,24,36,0.46) !important;
+}
+
+.detail-view .group-badge:hover {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-accent-soft, rgba(88,166,255,0.14)) 60%, transparent);
+}
+
+/* related cards in detail: group-aware border + hover response */
+.detail-view .related-card--group-love {
+  border-color: color-mix(in srgb, rgba(244,114,182,0.28) 56%, var(--border) 44%);
+}
+
+.detail-view .related-card--group-me {
+  border-color: color-mix(in srgb, rgba(52,211,153,0.28) 56%, var(--border) 44%);
+}
+
+.detail-view .related-card--group-joy {
+  border-color: color-mix(in srgb, rgba(251,191,36,0.3) 56%, var(--border) 44%);
+}
+
+.detail-view .related-card--group-all {
+  border-color: color-mix(in srgb, rgba(126,152,255,0.28) 56%, var(--border) 44%);
+}
+
+.detail-view .related-card--group-love:hover {
+  transform: translateY(-2px);
+  border-color: rgba(244,114,182,0.6);
+  background: linear-gradient(160deg, rgba(244,114,182,0.12), rgba(15,22,34,0.88));
+  box-shadow: 0 12px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(244,114,182,0.2);
+}
+
+.detail-view .related-card--group-me:hover {
+  transform: translateY(-2px);
+  border-color: rgba(52,211,153,0.58);
+  background: linear-gradient(160deg, rgba(52,211,153,0.11), rgba(15,22,34,0.88));
+  box-shadow: 0 12px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(52,211,153,0.19);
+}
+
+.detail-view .related-card--group-joy:hover {
+  transform: translateY(-2px);
+  border-color: rgba(251,191,36,0.62);
+  background: linear-gradient(160deg, rgba(251,191,36,0.12), rgba(15,22,34,0.88));
+  box-shadow: 0 12px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(251,191,36,0.2);
+}
+
+.detail-view .related-card--group-all:hover {
+  transform: translateY(-2px);
+  border-color: rgba(126,152,255,0.62);
+  background: linear-gradient(160deg, rgba(126,152,255,0.12), rgba(15,22,34,0.88));
+  box-shadow: 0 12px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(126,152,255,0.2);
+}
+
+.detail-view .related-card--group-love:hover .related-title { color: var(--pink); }
+.detail-view .related-card--group-me:hover .related-title { color: var(--green); }
+.detail-view .related-card--group-joy:hover .related-title { color: var(--yellow); }
+.detail-view .related-card--group-all:hover .related-title { color: #b8c7ff; }
+
+/* detail release links: group-tinted cards while keeping readability */
+.detail-view .detail-release-link--love {
+  border-color: rgba(244,114,182,0.4);
+}
+
+.detail-view .detail-release-link--me {
+  border-color: rgba(52,211,153,0.38);
+}
+
+.detail-view .detail-release-link--joy {
+  border-color: rgba(251,191,36,0.4);
+}
+
+.detail-view .detail-release-link--all {
+  border-color: rgba(126,152,255,0.4);
+}
+
+.detail-view .detail-release-link--love:hover { color: var(--pink); box-shadow: 0 0 0 2px rgba(244,114,182,0.12); }
+.detail-view .detail-release-link--me:hover { color: var(--green); box-shadow: 0 0 0 2px rgba(52,211,153,0.12); }
+.detail-view .detail-release-link--joy:hover { color: var(--yellow); box-shadow: 0 0 0 2px rgba(251,191,36,0.12); }
+.detail-view .detail-release-link--all:hover { color: #b8c7ff; box-shadow: 0 0 0 2px rgba(126,152,255,0.12); }
+
+/* ================================================================
+   Group Badge Final Override (cards/lists only)
+   ================================================================ */
+:where(.release-card, .song-card, .related-card, .creator-song-item, .song-search-card, .call-pattern-song, .call-beginner-song)
+  .group-badge.love:not(.group-archive-name) {
+  color: #f2f6ff !important;
+  border-color: rgba(244,114,182,0.56) !important;
+  background: rgba(244,114,182,0.14) !important;
+  box-shadow: none !important;
+}
+
+:where(.release-card, .song-card, .related-card, .creator-song-item, .song-search-card, .call-pattern-song, .call-beginner-song)
+  .group-badge.me:not(.group-archive-name) {
+  color: #f2f6ff !important;
+  border-color: rgba(52,211,153,0.54) !important;
+  background: rgba(52,211,153,0.13) !important;
+  box-shadow: none !important;
+}
+
+:where(.release-card, .song-card, .related-card, .creator-song-item, .song-search-card, .call-pattern-song, .call-beginner-song)
+  .group-badge.joy:not(.group-archive-name) {
+  color: #f2f6ff !important;
+  border-color: rgba(251,191,36,0.56) !important;
+  background: rgba(251,191,36,0.14) !important;
+  box-shadow: none !important;
+}
+
+:where(.release-card, .song-card, .related-card, .creator-song-item, .song-search-card, .call-pattern-song, .call-beginner-song)
+  .group-badge.all:not(.group-archive-name) {
+  color: #f2f6ff !important;
+  border-color: rgba(126,152,255,0.56) !important;
+  background: rgba(126,152,255,0.14) !important;
+  box-shadow: none !important;
+}
+
+:where(.release-card, .song-card, .related-card, .creator-song-item, .song-search-card, .call-pattern-song, .call-beginner-song):hover
+  .group-badge.love:not(.group-archive-name) {
+  color: var(--pink) !important;
+  border-color: rgba(244,114,182,0.68) !important;
+  background: rgba(244,114,182,0.2) !important;
+  box-shadow: 0 0 0 2px rgba(244,114,182,0.12) !important;
+}
+
+:where(.release-card, .song-card, .related-card, .creator-song-item, .song-search-card, .call-pattern-song, .call-beginner-song):hover
+  .group-badge.me:not(.group-archive-name) {
+  color: var(--green) !important;
+  border-color: rgba(52,211,153,0.66) !important;
+  background: rgba(52,211,153,0.19) !important;
+  box-shadow: 0 0 0 2px rgba(52,211,153,0.11) !important;
+}
+
+:where(.release-card, .song-card, .related-card, .creator-song-item, .song-search-card, .call-pattern-song, .call-beginner-song):hover
+  .group-badge.joy:not(.group-archive-name) {
+  color: var(--yellow) !important;
+  border-color: rgba(251,191,36,0.68) !important;
+  background: rgba(251,191,36,0.2) !important;
+  box-shadow: 0 0 0 2px rgba(251,191,36,0.12) !important;
+}
+
+:where(.release-card, .song-card, .related-card, .creator-song-item, .song-search-card, .call-pattern-song, .call-beginner-song):hover
+  .group-badge.all:not(.group-archive-name) {
+  color: #b8c7ff !important;
+  border-color: rgba(126,152,255,0.68) !important;
+  background: rgba(126,152,255,0.2) !important;
+  box-shadow: 0 0 0 2px rgba(126,152,255,0.11) !important;
+}
+
+/* ================================================================
+   Release Song Chip Final Override (independent from .group-badge)
+   ================================================================ */
+#releases .release-song-link--love {
+  color: #f2f6ff !important;
+  border-color: rgba(244,114,182,0.34) !important;
+}
+
+#releases .release-song-link--me {
+  color: #f2f6ff !important;
+  border-color: rgba(52,211,153,0.33) !important;
+}
+
+#releases .release-song-link--joy {
+  color: #f2f6ff !important;
+  border-color: rgba(251,191,36,0.36) !important;
+}
+
+#releases .release-song-link--all {
+  color: #f2f6ff !important;
+  border-color: rgba(126,152,255,0.36) !important;
+}
+
+#releases .release-song-link--love:is(:hover, :focus-visible) {
+  color: #ffd6ea !important;
+  border-color: rgba(244,114,182,0.58) !important;
+  box-shadow: 0 0 0 2px rgba(244,114,182,0.12) !important;
+}
+
+#releases .release-song-link--me:is(:hover, :focus-visible) {
+  color: #d5fff1 !important;
+  border-color: rgba(52,211,153,0.56) !important;
+  box-shadow: 0 0 0 2px rgba(52,211,153,0.11) !important;
+}
+
+#releases .release-song-link--joy:is(:hover, :focus-visible) {
+  color: #ffeab0 !important;
+  border-color: rgba(251,191,36,0.58) !important;
+  box-shadow: 0 0 0 2px rgba(251,191,36,0.12) !important;
+}
+
+#releases .release-song-link--all:is(:hover, :focus-visible) {
+  color: #dce5ff !important;
+  border-color: rgba(126,152,255,0.58) !important;
+  box-shadow: 0 0 0 2px rgba(126,152,255,0.11) !important;
+}
+
+/* ================================================================
+   Phase 1-1 Final: Group Badge Always-Colored (card/list/detail only)
+   ================================================================ */
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .detail-view,
+  .search-mode-item
+) .group-badge.love:not(.group-archive-name) {
+  color: #f5a4cc !important;
+  border-color: rgba(244,114,182,0.56) !important;
+  background: rgba(244,114,182,0.16) !important;
+  box-shadow: inset 0 0 0 1px rgba(244,114,182,0.08) !important;
+}
+
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .detail-view,
+  .search-mode-item
+) .group-badge.me:not(.group-archive-name) {
+  color: #95e8c9 !important;
+  border-color: rgba(52,211,153,0.54) !important;
+  background: rgba(52,211,153,0.15) !important;
+  box-shadow: inset 0 0 0 1px rgba(52,211,153,0.08) !important;
+}
+
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .detail-view,
+  .search-mode-item
+) .group-badge.joy:not(.group-archive-name) {
+  color: #f3cf7a !important;
+  border-color: rgba(251,191,36,0.56) !important;
+  background: rgba(251,191,36,0.16) !important;
+  box-shadow: inset 0 0 0 1px rgba(251,191,36,0.08) !important;
+}
+
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .search-mode-item
+) .group-badge.all:not(.group-archive-name) {
+  color: #b9cbff !important;
+  border-color: rgba(126,152,255,0.56) !important;
+  background: rgba(126,152,255,0.16) !important;
+  box-shadow: inset 0 0 0 1px rgba(126,152,255,0.08) !important;
+}
+
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .search-mode-item
+):hover .group-badge.love:not(.group-archive-name),
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .search-mode-item
+) .group-badge.love:not(.group-archive-name):hover {
+  color: #ffd1e8 !important;
+  border-color: rgba(244,114,182,0.72) !important;
+  box-shadow: 0 0 0 2px rgba(244,114,182,0.12) !important;
+}
+
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .search-mode-item
+):hover .group-badge.me:not(.group-archive-name),
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .search-mode-item
+) .group-badge.me:not(.group-archive-name):hover {
+  color: #d6fff1 !important;
+  border-color: rgba(52,211,153,0.7) !important;
+  box-shadow: 0 0 0 2px rgba(52,211,153,0.12) !important;
+}
+
+/* ================================================================
+   Detail Page: group badge = white outline + hover color (same as releases)
+   ================================================================ */
+.detail-view .group-badge.love:not(.group-archive-name),
+.detail-view .group-badge.me:not(.group-archive-name),
+.detail-view .group-badge.joy:not(.group-archive-name),
+.detail-view .group-badge.all:not(.group-archive-name) {
+  color: #f2f6ff !important;
+}
+
+.detail-view .group-badge.love:not(.group-archive-name) {
+  border-color: rgba(244,114,182,0.56) !important;
+  background: rgba(244,114,182,0.14) !important;
+}
+
+.detail-view .group-badge.me:not(.group-archive-name) {
+  border-color: rgba(52,211,153,0.54) !important;
+  background: rgba(52,211,153,0.13) !important;
+}
+
+.detail-view .group-badge.joy:not(.group-archive-name) {
+  border-color: rgba(251,191,36,0.56) !important;
+  background: rgba(251,191,36,0.14) !important;
+}
+
+.detail-view .group-badge.all:not(.group-archive-name) {
+  border-color: rgba(126,152,255,0.56) !important;
+  background: rgba(126,152,255,0.14) !important;
+}
+
+.detail-view :is(.detail-header, .related-card, .creator-song-item, .song-card, .song-search-card):is(:hover, :focus-within) .group-badge.love:not(.group-archive-name) {
+  color: var(--pink) !important;
+  border-color: rgba(244,114,182,0.72) !important;
+  box-shadow: 0 0 0 2px rgba(244,114,182,0.12) !important;
+}
+
+.detail-view :is(.detail-header, .related-card, .creator-song-item, .song-card, .song-search-card):is(:hover, :focus-within) .group-badge.me:not(.group-archive-name) {
+  color: var(--green) !important;
+  border-color: rgba(52,211,153,0.7) !important;
+  box-shadow: 0 0 0 2px rgba(52,211,153,0.12) !important;
+}
+
+.detail-view :is(.detail-header, .related-card, .creator-song-item, .song-card, .song-search-card):is(:hover, :focus-within) .group-badge.joy:not(.group-archive-name) {
+  color: var(--yellow) !important;
+  border-color: rgba(251,191,36,0.72) !important;
+  box-shadow: 0 0 0 2px rgba(251,191,36,0.12) !important;
+}
+
+.detail-view :is(.detail-header, .related-card, .creator-song-item, .song-card, .song-search-card):is(:hover, :focus-within) .group-badge.all:not(.group-archive-name) {
+  color: #b8c7ff !important;
+  border-color: rgba(126,152,255,0.72) !important;
+  box-shadow: 0 0 0 2px rgba(126,152,255,0.12) !important;
+}
+
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .search-mode-item
+):hover .group-badge.joy:not(.group-archive-name),
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .search-mode-item
+) .group-badge.joy:not(.group-archive-name):hover {
+  color: #ffeab2 !important;
+  border-color: rgba(251,191,36,0.72) !important;
+  box-shadow: 0 0 0 2px rgba(251,191,36,0.12) !important;
+}
+
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .search-mode-item
+):hover .group-badge.all:not(.group-archive-name),
+:where(
+  .release-card,
+  .song-card,
+  .related-card,
+  .creator-song-item,
+  .song-search-card,
+  .call-pattern-song,
+  .call-beginner-song,
+  .search-mode-item
+) .group-badge.all:not(.group-archive-name):hover {
+  color: #dce6ff !important;
+  border-color: rgba(126,152,255,0.72) !important;
+  box-shadow: 0 0 0 2px rgba(126,152,255,0.12) !important;
+}
+
+/* ================================================================
+   Creator Detail Final Tuning
+   - archive title: white default / group color on hover
+   - timeline: compact text row (not chip), keep hover feel
+   - timeline badge: always group-colored + stable shape
+   ================================================================ */
+.creator-detail-view .creator-song-item .creator-song-link {
+  display: inline !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #e8f0fb !important;
+  box-shadow: none !important;
+  line-height: 1.5 !important;
+  transform: none !important;
+}
+
+.creator-detail-view .creator-song-item .creator-song-link:is(:hover, :focus-visible) {
+  text-decoration: none;
+}
+
+.creator-detail-view .creator-song-item--group-love .creator-song-link:is(:hover, :focus-visible) {
+  color: var(--pink) !important;
+}
+
+.creator-detail-view .creator-song-item--group-me .creator-song-link:is(:hover, :focus-visible) {
+  color: var(--green) !important;
+}
+
+.creator-detail-view .creator-song-item--group-joy .creator-song-link:is(:hover, :focus-visible) {
+  color: var(--yellow) !important;
+}
+
+.creator-detail-view .creator-song-item--group-all .creator-song-link:is(:hover, :focus-visible) {
+  color: #b8c7ff !important;
+}
+
+.creator-detail-view .creator-timeline-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 6px 10px 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(130, 150, 182, 0.16);
+  background: rgba(13, 20, 31, 0.34);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color var(--accent-transition),
+    background var(--accent-transition),
+    box-shadow var(--accent-transition),
+    transform var(--accent-transition);
+}
+
+.creator-detail-view .creator-timeline-item:is(:hover, :focus-visible) {
+  text-decoration: none;
+}
+
+.creator-detail-view .creator-timeline-item::before {
+  top: 8px;
+  bottom: 8px;
+  pointer-events: none;
+}
+
+.creator-detail-view .creator-timeline-body {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.creator-detail-view .creator-timeline-title {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #dce7f7;
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.36;
+  box-shadow: none;
+  -webkit-line-clamp: 1;
+}
+
+.creator-detail-view .creator-timeline-title--love,
+.creator-detail-view .creator-timeline-title--me,
+.creator-detail-view .creator-timeline-title--joy,
+.creator-detail-view .creator-timeline-title--all {
+  color: #dce7f7;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.creator-detail-view .creator-timeline-meta {
+  font-size: 10px;
+  gap: 2px 6px;
+}
+
+.creator-detail-view .creator-timeline-item:hover {
+  transform: translateY(-2px);
+}
+
+.creator-detail-view .creator-timeline-item--group-love:hover {
+  border-color: rgba(244, 114, 182, 0.4);
+  background: rgba(244, 114, 182, 0.07);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(244, 114, 182, 0.16);
+}
+
+.creator-detail-view .creator-timeline-item--group-me:hover {
+  border-color: rgba(52, 211, 153, 0.38);
+  background: rgba(52, 211, 153, 0.07);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(52, 211, 153, 0.16);
+}
+
+.creator-detail-view .creator-timeline-item--group-joy:hover {
+  border-color: rgba(251, 191, 36, 0.42);
+  background: rgba(251, 191, 36, 0.08);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(251, 191, 36, 0.17);
+}
+
+.creator-detail-view .creator-timeline-item--group-all:hover {
+  border-color: rgba(126, 152, 255, 0.4);
+  background: rgba(126, 152, 255, 0.07);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(126, 152, 255, 0.16);
+}
+
+.creator-detail-view .creator-timeline-item--group-love:hover .creator-timeline-title { color: var(--pink); }
+.creator-detail-view .creator-timeline-item--group-me:hover .creator-timeline-title { color: var(--green); }
+.creator-detail-view .creator-timeline-item--group-joy:hover .creator-timeline-title { color: var(--yellow); }
+.creator-detail-view .creator-timeline-item--group-all:hover .creator-timeline-title { color: #bfd0ff; }
+
+.creator-detail-view .creator-timeline-item .group-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  flex: 0 0 auto !important;
+  line-height: 1 !important;
+  min-height: 20px !important;
+  height: 20px !important;
+  padding: 0 7px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  border-radius: 999px !important;
+}
+
+.creator-detail-view .creator-timeline-item .group-badge.love {
+  color: var(--pink) !important;
+  background: rgba(244, 114, 182, 0.14) !important;
+  border-color: rgba(244, 114, 182, 0.52) !important;
+}
+
+.creator-detail-view .creator-timeline-item .group-badge.me {
+  color: var(--green) !important;
+  background: rgba(52, 211, 153, 0.14) !important;
+  border-color: rgba(52, 211, 153, 0.52) !important;
+}
+
+.creator-detail-view .creator-timeline-item .group-badge.joy {
+  color: var(--yellow) !important;
+  background: rgba(251, 191, 36, 0.15) !important;
+  border-color: rgba(251, 191, 36, 0.56) !important;
+}
+
+.creator-detail-view .creator-timeline-item .group-badge.all {
+  color: #b8c7ff !important;
+  background: rgba(126, 152, 255, 0.15) !important;
+  border-color: rgba(126, 152, 255, 0.56) !important;
+}
+
+/* ================================================================
+   Release Detail: track list align with creator archive behavior
+   - title: white default, group color on hover
+   - badge: always group-colored
+   - item border: subtle group tint + stronger on hover
+   ================================================================ */
+.detail-release-songs .creator-song-title {
+  font-weight: 780;
+}
+
+.detail-release-songs .creator-song-link {
+  color: #e8f0fb !important;
+  font-size: 15px;
+  font-weight: 780;
+  line-height: 1.42;
+  text-decoration: none;
+  transition:
+    color var(--accent-transition),
+    text-shadow var(--accent-transition);
+}
+
+.detail-release-songs .creator-song-link:is(:hover, :focus-visible) {
+  text-decoration: none;
+}
+
+.detail-release-songs .creator-song-item--group-love .creator-song-link:is(:hover, :focus-visible) {
+  color: var(--pink) !important;
+  text-shadow: 0 0 10px rgba(244, 114, 182, 0.22);
+}
+
+.detail-release-songs .creator-song-item--group-me .creator-song-link:is(:hover, :focus-visible) {
+  color: var(--green) !important;
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.2);
+}
+
+.detail-release-songs .creator-song-item--group-joy .creator-song-link:is(:hover, :focus-visible) {
+  color: var(--yellow) !important;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.22);
+}
+
+.detail-release-songs .creator-song-item--group-all .creator-song-link:is(:hover, :focus-visible) {
+  color: #bfd0ff !important;
+  text-shadow: 0 0 10px rgba(126, 152, 255, 0.22);
+}
+
+.detail-release-songs .creator-song-item--group-love {
+  border-color: rgba(244, 114, 182, 0.28);
+}
+
+.detail-release-songs .creator-song-item--group-me {
+  border-color: rgba(52, 211, 153, 0.26);
+}
+
+.detail-release-songs .creator-song-item--group-joy {
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.detail-release-songs .creator-song-item--group-all {
+  border-color: rgba(126, 152, 255, 0.28);
+}
+
+.detail-release-songs .creator-song-item--group-love:hover {
+  border-color: rgba(244, 114, 182, 0.44);
+  background: color-mix(in srgb, rgba(244,114,182,0.12) 40%, rgba(16,24,37,0.88));
+  box-shadow: 0 12px 24px rgba(0,0,0,0.24), 0 0 0 1px rgba(244,114,182,0.2);
+}
+
+.detail-release-songs .creator-song-item--group-me:hover {
+  border-color: rgba(52, 211, 153, 0.42);
+  background: color-mix(in srgb, rgba(52,211,153,0.12) 40%, rgba(16,24,37,0.88));
+  box-shadow: 0 12px 24px rgba(0,0,0,0.24), 0 0 0 1px rgba(52,211,153,0.2);
+}
+
+.detail-release-songs .creator-song-item--group-joy:hover {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: color-mix(in srgb, rgba(251,191,36,0.12) 40%, rgba(16,24,37,0.88));
+  box-shadow: 0 12px 24px rgba(0,0,0,0.24), 0 0 0 1px rgba(251,191,36,0.2);
+}
+
+.detail-release-songs .creator-song-item--group-all:hover {
+  border-color: rgba(126, 152, 255, 0.44);
+  background: color-mix(in srgb, rgba(126,152,255,0.12) 40%, rgba(16,24,37,0.88));
+  box-shadow: 0 12px 24px rgba(0,0,0,0.24), 0 0 0 1px rgba(126,152,255,0.2);
+}
+
+.detail-release-songs .group-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  flex: 0 0 auto !important;
+  line-height: 1 !important;
+  min-height: 20px !important;
+  height: 20px !important;
+  padding: 0 7px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  border-radius: 999px !important;
+}
+
+.detail-release-songs .group-badge.love {
+  color: var(--pink) !important;
+  background: rgba(244, 114, 182, 0.14) !important;
+  border-color: rgba(244, 114, 182, 0.52) !important;
+}
+
+.detail-release-songs .group-badge.me {
+  color: var(--green) !important;
+  background: rgba(52, 211, 153, 0.14) !important;
+  border-color: rgba(52, 211, 153, 0.52) !important;
+}
+
+.detail-release-songs .group-badge.joy {
+  color: var(--yellow) !important;
+  background: rgba(251, 191, 36, 0.15) !important;
+  border-color: rgba(251, 191, 36, 0.56) !important;
+}
+
+.detail-release-songs .group-badge.all {
+  color: #b8c7ff !important;
+  background: rgba(126, 152, 255, 0.15) !important;
+  border-color: rgba(126, 152, 255, 0.56) !important;
+}
+
+/* ================================================================
+   Creator Detail Hover Cleanup
+   ================================================================ */
+.creator-detail-view .creator-song-item .creator-song-link,
+.creator-detail-view .creator-song-item .creator-song-link:is(:hover, :focus-visible),
+.creator-detail-view .creator-timeline-title,
+.creator-detail-view .creator-timeline-item:hover .creator-timeline-title {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.creator-detail-view .creator-song-item .creator-song-link:is(:hover, :focus-visible),
+.creator-detail-view .creator-timeline-item:hover .creator-timeline-title {
+  transform: none !important;
+}
+
+/* collaborator sample songs: add subtle group color identity */
+.creator-detail-view .creator-collab-song--love {
+  color: #f2f6ff;
+  border-color: rgba(244, 114, 182, 0.5);
+  background: rgba(244, 114, 182, 0.12);
+}
+
+.creator-detail-view .creator-collab-song--me {
+  color: #f2f6ff;
+  border-color: rgba(52, 211, 153, 0.48);
+  background: rgba(52, 211, 153, 0.11);
+}
+
+.creator-detail-view .creator-collab-song--joy {
+  color: #f2f6ff;
+  border-color: rgba(251, 191, 36, 0.52);
+  background: rgba(251, 191, 36, 0.12);
+}
+
+.creator-detail-view .creator-collab-song--all {
+  color: #f2f6ff;
+  border-color: rgba(126, 152, 255, 0.5);
+  background: rgba(126, 152, 255, 0.12);
+}
+
+.creator-detail-view .creator-collab-card:hover .creator-collab-song--love {
+  color: var(--pink);
+  border-color: rgba(244, 114, 182, 0.68);
+  box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.11);
+}
+
+.creator-detail-view .creator-collab-card:hover .creator-collab-song--me {
+  color: var(--green);
+  border-color: rgba(52, 211, 153, 0.66);
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.11);
+}
+
+.creator-detail-view .creator-collab-card:hover .creator-collab-song--joy {
+  color: var(--yellow);
+  border-color: rgba(251, 191, 36, 0.7);
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.11);
+}
+
+.creator-detail-view .creator-collab-card:hover .creator-collab-song--all {
+  color: #bfd0ff;
+  border-color: rgba(126, 152, 255, 0.68);
+  box-shadow: 0 0 0 2px rgba(126, 152, 255, 0.11);
+}
+
+/* ================================================================
+   Creator Timeline: year chip grid (latest override)
+   ================================================================ */
+.creator-detail-view .creator-timeline-songs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.creator-detail-view .creator-timeline-chip {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 1px;
+  flex: 0 1 340px;
+  max-width: 380px;
+  min-width: 240px;
+  padding: 6px 9px 6px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(130, 150, 182, 0.16);
+  background: rgba(13, 20, 31, 0.34);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color var(--accent-transition),
+    background var(--accent-transition),
+    box-shadow var(--accent-transition),
+    transform var(--accent-transition);
+}
+
+.creator-detail-view .creator-timeline-chip::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(140, 160, 196, 0.38);
+  pointer-events: none;
+}
+
+.creator-detail-view .creator-timeline-chip--group-love::before { background: rgba(244, 114, 182, 0.72); }
+.creator-detail-view .creator-timeline-chip--group-me::before { background: rgba(52, 211, 153, 0.74); }
+.creator-detail-view .creator-timeline-chip--group-joy::before { background: rgba(251, 191, 36, 0.76); }
+.creator-detail-view .creator-timeline-chip--group-all::before { background: rgba(126, 152, 255, 0.72); }
+
+.creator-detail-view .creator-timeline-chip:is(:hover, :focus-visible) {
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+.creator-detail-view .creator-timeline-chip--group-love:hover {
+  border-color: rgba(244, 114, 182, 0.4);
+  background: rgba(244, 114, 182, 0.07);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(244, 114, 182, 0.16);
+}
+.creator-detail-view .creator-timeline-chip--group-me:hover {
+  border-color: rgba(52, 211, 153, 0.38);
+  background: rgba(52, 211, 153, 0.07);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(52, 211, 153, 0.16);
+}
+.creator-detail-view .creator-timeline-chip--group-joy:hover {
+  border-color: rgba(251, 191, 36, 0.42);
+  background: rgba(251, 191, 36, 0.08);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(251, 191, 36, 0.17);
+}
+.creator-detail-view .creator-timeline-chip--group-all:hover {
+  border-color: rgba(126, 152, 255, 0.4);
+  background: rgba(126, 152, 255, 0.07);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(126, 152, 255, 0.16);
+}
+
+.creator-detail-view .creator-timeline-chip-title {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  color: #dce7f7;
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.creator-detail-view .creator-timeline-chip-meta {
+  grid-column: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+}
+
+.creator-detail-view .creator-timeline-chip-role,
+.creator-detail-view .creator-timeline-chip-date {
+  font-size: 9.5px;
+  color: #8ea2bf;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.creator-detail-view .creator-timeline-chip-date::before {
+  content: "・";
+  margin: 0 5px 0 4px;
+  color: #7085a3;
+}
+
+.creator-detail-view .creator-timeline-chip--group-love:hover .creator-timeline-chip-title { color: var(--pink); }
+.creator-detail-view .creator-timeline-chip--group-me:hover .creator-timeline-chip-title { color: var(--green); }
+.creator-detail-view .creator-timeline-chip--group-joy:hover .creator-timeline-chip-title { color: var(--yellow); }
+.creator-detail-view .creator-timeline-chip--group-all:hover .creator-timeline-chip-title { color: #bfd0ff; }
+
+.creator-detail-view .creator-timeline-chip .group-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  flex: 0 0 auto !important;
+  line-height: 1 !important;
+  min-height: 16px !important;
+  height: 16px !important;
+  padding: 0 5px !important;
+  font-size: 8px !important;
+  font-weight: 800 !important;
+  border-radius: 999px !important;
+}
+.creator-detail-view .creator-timeline-chip .group-badge.love {
+  color: var(--pink) !important;
+  background: rgba(244, 114, 182, 0.14) !important;
+  border-color: rgba(244, 114, 182, 0.52) !important;
+}
+.creator-detail-view .creator-timeline-chip .group-badge.me {
+  color: var(--green) !important;
+  background: rgba(52, 211, 153, 0.14) !important;
+  border-color: rgba(52, 211, 153, 0.52) !important;
+}
+.creator-detail-view .creator-timeline-chip .group-badge.joy {
+  color: var(--yellow) !important;
+  background: rgba(251, 191, 36, 0.15) !important;
+  border-color: rgba(251, 191, 36, 0.56) !important;
+}
+.creator-detail-view .creator-timeline-chip .group-badge.all {
+  color: #b8c7ff !important;
+  background: rgba(126, 152, 255, 0.15) !important;
+  border-color: rgba(126, 152, 255, 0.56) !important;
+}
+
+@media (max-width: 720px) {
+  .creator-detail-view .creator-timeline-chip {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+/* ================================================================
+   Creator Detail: compact chip sizing final lock
+   ================================================================ */
+.creator-detail-view .creator-collab-song {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 20px;
+  height: 20px;
+  max-width: 100%;
+  padding: 0 7px;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 999px;
+}
+
+.creator-detail-view .creator-role-row .role-pill {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-height: 20px;
+  height: 20px;
+  padding: 0 7px;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+
+/* creator detail only: role badges (作詞/作曲/編曲/共作) compact lock */
+.creator-detail-view .creator-compact-role-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-height: 20px !important;
+  height: 20px !important;
+  padding: 3px 7px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  border: 1px solid rgba(138, 158, 190, 0.28) !important;
+  background: rgba(14, 21, 33, 0.72) !important;
+  color: #c7d4e8 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  text-decoration: none !important;
+}
+
+.creator-detail-view .creator-compact-role-pill:hover {
+  border-color: rgba(156, 176, 206, 0.36) !important;
+  background: rgba(17, 25, 38, 0.78) !important;
+  color: #d6e2f5 !important;
+}
+
+/* timeline role is text metadata (not pill) */
+.creator-detail-view .creator-compact-role-pill-text {
+  display: inline;
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #8ea2bf;
+  font-size: 9.5px;
+  line-height: 1.15;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.creator-detail-view .creator-song-title .group-badge,
+.creator-detail-view .creator-timeline-chip .group-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-height: 18px !important;
+  height: 18px !important;
+  padding: 0 6px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  border-radius: 999px !important;
+}
+
+/* =========================
+   SVG ICON SYSTEM FIX
+========================= */
+svg.ui-icon {
+  display: block;
+  width: 1em;
+  height: 1em;
+  min-width: 1em;
+  min-height: 1em;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+  overflow: visible;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.ui-icon * {
+  vector-effect: non-scaling-stroke;
+}
+
+.icon-label,
+.credit-label,
+.timeline-meta,
+.creator-role-pill,
+.creator-song-role,
+.timeline-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.song-credit dt,
+.credit-row dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+}
+
+.global-nav a,
+.global-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.global-nav .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.ui-icon--xs {
+  width: 14px;
+  height: 14px;
+}
+
+.ui-icon--meta {
+  width: 15px;
+  height: 15px;
+}
+
+.timeline-item .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.creator-detail-view .ui-icon {
+  flex-shrink: 0;
+}
+
+/* credits label alignment + readable size */
+.credits-list > div {
+  grid-template-columns: 140px 1fr !important;
+  align-items: center !important;
+}
+
+.credits-list dt,
+.song-credit dt,
+.credit-row dt {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  min-width: 140px !important;
+  width: 140px !important;
+  padding-left: 16px !important;
+  text-align: left !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+  writing-mode: horizontal-tb !important;
+}
+
+.credits-list dt,
+.song-credit dt span,
+.credit-row dt span,
+.song-credit dt .label,
+.credit-row dt .label {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.02em !important;
+  transform: none !important;
+  position: relative;
+  top: 1px;
+}
+
+.credits-list dt .ui-icon,
+.song-credit dt .ui-icon,
+.credit-row dt .ui-icon,
+.song-credit dt svg,
+.credit-row dt svg {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  flex: 0 0 22px !important;
+  display: block !important;
+  overflow: visible !important;
+  opacity: 0.92;
+}
+
+/* credit UI rebalance: icon is supportive, names are primary */
+.credits-list > div {
+  grid-template-columns: 92px 1fr !important;
+  min-height: 52px !important;
+  padding: 0 18px !important;
+  gap: 8px !important;
+}
+
+.credits-list dt,
+.song-credit dt,
+.credit-row dt {
+  gap: 7px !important;
+  min-width: 84px !important;
+  width: 84px !important;
+  padding-left: 14px !important;
+}
+
+.credits-list dt .ui-icon,
+.song-credit dt .ui-icon,
+.credit-row dt .ui-icon,
+.song-credit dt svg,
+.credit-row dt svg {
+  width: 13px !important;
+  height: 13px !important;
+  min-width: 13px !important;
+  min-height: 13px !important;
+  flex: 0 0 13px !important;
+  opacity: 0.7 !important;
+}
+
+.credits-list dt,
+.song-credit dt .label,
+.credit-row dt .label {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+.song-credit dd a,
+.credit-row dd a,
+.credits-list dd a {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+.credits-list dd,
+.song-credit dd,
+.credit-row dd {
+  padding-left: 8px !important;
+}
+
+.song-meta-pill {
+  height: 24px !important;
+  padding: 0 9px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  font-size: 11px !important;
+  gap: 6px !important;
+}
+
+.song-meta-pill .ui-icon {
+  width: 14px !important;
+  height: 14px !important;
+  opacity: 0.7 !important;
+}
+
+/* credit column alignment fix: keep labels/icons left aligned */
+.detail-view .credits-list > div {
+  grid-template-columns: 76px 1fr !important;
+}
+
+.detail-view .credits-list dt,
+.detail-view .song-credit dt,
+.detail-view .credit-row dt {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  align-items: center !important;
+  padding-left: 8px !important;
+  gap: 5px !important;
+  min-width: 76px !important;
+  width: 76px !important;
+}
+
+.detail-view .credits-list dt .ui-icon,
+.detail-view .song-credit dt .ui-icon,
+.detail-view .credit-row dt .ui-icon {
+  margin-left: 0 !important;
+}
+
+.detail-view .credits-list dd,
+.detail-view .song-credit dd,
+.detail-view .credit-row dd {
+  padding-left: 2px !important;
+}
+
+/* release detail: return to text-first metadata balance */
+.detail-release-songs .creator-song-item {
+  padding: 14px 16px !important;
+}
+
+.detail-release-songs .creator-song-title .track-title {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  margin-bottom: 6px;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.detail-release-songs .song-credit-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.detail-release-songs .song-credit-inline .credit-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.detail-release-songs .song-credit-inline .ui-icon {
+  width: 12px !important;
+  height: 12px !important;
+  min-width: 12px !important;
+  min-height: 12px !important;
+  opacity: 0.62;
+}
+
+/* timeline/section heading icon ratio lock */
+.detail-related h2 .ui-icon,
+.creator-timeline-section h2 .ui-icon,
+.creator-collab-section h2 .ui-icon {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  aspect-ratio: 1 / 1 !important;
+  transform: none !important;
+}
+
+/* header/nav isolated icon alignment */
+.global-header,
+.global-nav,
+.global-nav a,
+.brand-mark {
+  display: flex;
+  align-items: center;
+}
+
+.global-nav {
+  gap: 12px;
+}
+
+.global-nav a,
+.global-nav button {
+  gap: 6px;
+  line-height: 1;
+}
+
+.global-header .ui-icon,
+.global-nav .ui-icon,
+.brand-mark .ui-icon {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  flex: 0 0 16px !important;
+  aspect-ratio: 1 / 1 !important;
+  transform: none !important;
+  translate: none !important;
+  vertical-align: middle !important;
+  display: inline-block !important;
+  overflow: visible !important;
+}
+
+.global-nav a {
+  align-items: center !important;
+}
+
+.global-nav .ui-icon--nav-creator {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  flex: 0 0 18px !important;
+  opacity: 0.8;
+}
+
+.global-nav a:is(:hover, :focus-visible) .ui-icon--nav-creator,
+.global-nav a.is-active .ui-icon--nav-creator {
+  opacity: 0.95;
+}
+
+/* ================================================================
+   Release Detail track titles: plain text (not pill)
+   ================================================================ */
+.detail-release-songs .creator-song-item {
+  cursor: pointer;
+}
+
+.detail-release-songs .creator-song-item::before,
+.detail-release-songs .creator-song-item::after {
+  pointer-events: none;
+}
+
+.detail-release-songs .creator-song-link,
+.detail-release-songs .creator-song-link:is(:hover, :focus-visible) {
+  display: inline !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+  line-height: 1.45 !important;
+}
+
+.detail-release-songs .creator-song-link {
+  color: #eaf1fb !important;
+  font-size: 16px !important;
+  font-weight: 780 !important;
+}
+
+/* ================================================================
+   FINAL OVERRIDE: detail credits spacing tighten
+   ================================================================ */
+.detail-view .credits-list > div {
+  grid-template-columns: 72px 1fr !important;
+  gap: 6px !important;
+  padding: 0 12px !important;
+}
+
+.detail-view .credits-list dt {
+  min-width: 72px !important;
+  width: 72px !important;
+  padding-left: 4px !important;
+  gap: 4px !important;
+  justify-content: flex-start !important;
+}
+
+.detail-view .credits-list dd {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* ================================================================
+   Icon balance pass: metadata-first, text-primary
+   ================================================================ */
+/* 1) role/credit icons: small, quiet, readable */
+.detail-view .credits-list dt .ui-icon,
+.detail-view .credit-row .ui-icon,
+.detail-release-songs .song-credit-inline .ui-icon,
+.creator-detail-view .creator-role-row .ui-icon,
+.creator-detail-view .creator-song-meta .ui-icon {
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  min-height: 14px !important;
+  flex: 0 0 14px !important;
+  opacity: 0.62 !important;
+  stroke-width: 1.95 !important;
+}
+
+.detail-view .credits-list dt,
+.detail-view .credit-row dt,
+.detail-release-songs .song-credit-inline .credit-item {
+  gap: 6px !important;
+}
+
+/* 2) section heading icons: medium, softer than title text */
+.detail-related h2 .ui-icon,
+.creator-timeline-section h2 .ui-icon,
+.creator-collab-section h2 .ui-icon,
+.detail-release-songs h2 .ui-icon {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  flex: 0 0 18px !important;
+  opacity: 0.54 !important;
+  stroke-width: 2 !important;
+}
+
+/* 3) header creator icon: slightly larger but still aligned */
+.global-nav .ui-icon--nav-creator {
+  width: 17px !important;
+  height: 17px !important;
+  min-width: 17px !important;
+  min-height: 17px !important;
+  flex: 0 0 17px !important;
+  opacity: 0.8 !important;
+  stroke-width: 2.1 !important;
+}
+
+/* ================================================================
+   Phase A-2: creator detail hover color system cleanup
+   scope: ?creator=xxx only
+   ================================================================ */
+.creator-detail-view .creator-song-item,
+.creator-detail-view .creator-collab-card,
+.creator-detail-view .creator-timeline-item,
+.creator-detail-view .creator-timeline-chip {
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.creator-detail-view .creator-song-link,
+.creator-detail-view .creator-timeline-title,
+.creator-detail-view .creator-collab-head strong {
+  color: #eaf1fb !important;
+  transition: color 180ms ease;
+}
+
+/* base group tones: muted + subtle */
+.creator-detail-view .creator-song-item--group-love,
+.creator-detail-view .creator-collab-song--love,
+.creator-detail-view .creator-timeline-item--group-love,
+.creator-detail-view .creator-timeline-chip--group-love {
+  --creator-accent: rgba(244, 114, 182, 0.9);
+  --creator-border: rgba(244, 114, 182, 0.2);
+  --creator-tint: rgba(244, 114, 182, 0.06);
+}
+
+.creator-detail-view .creator-song-item--group-me,
+.creator-detail-view .creator-collab-song--me,
+.creator-detail-view .creator-timeline-item--group-me,
+.creator-detail-view .creator-timeline-chip--group-me {
+  --creator-accent: rgba(52, 211, 153, 0.9);
+  --creator-border: rgba(52, 211, 153, 0.2);
+  --creator-tint: rgba(52, 211, 153, 0.06);
+}
+
+.creator-detail-view .creator-song-item--group-joy,
+.creator-detail-view .creator-collab-song--joy,
+.creator-detail-view .creator-timeline-item--group-joy,
+.creator-detail-view .creator-timeline-chip--group-joy {
+  --creator-accent: rgba(251, 191, 36, 0.9);
+  --creator-border: rgba(251, 191, 36, 0.22);
+  --creator-tint: rgba(251, 191, 36, 0.07);
+}
+
+.creator-detail-view .creator-song-item--group-all,
+.creator-detail-view .creator-collab-song--all,
+.creator-detail-view .creator-timeline-item--group-all,
+.creator-detail-view .creator-timeline-chip--group-all {
+  --creator-accent: rgba(157, 178, 255, 0.9);
+  --creator-border: rgba(157, 178, 255, 0.22);
+  --creator-tint: rgba(157, 178, 255, 0.07);
+}
+
+/* creator song items */
+.creator-detail-view .creator-song-item {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(11, 17, 30, 0.58) !important;
+  cursor: pointer;
+}
+
+.creator-detail-view .creator-song-item::before,
+.creator-detail-view .creator-song-item::after {
+  pointer-events: none;
+}
+
+.creator-detail-view .creator-song-item:hover {
+  transform: translateY(-1px);
+}
+
+.creator-detail-view .creator-song-item--group-love:hover,
+.creator-detail-view .creator-song-item--group-me:hover,
+.creator-detail-view .creator-song-item--group-joy:hover,
+.creator-detail-view .creator-song-item--group-all:hover {
+  border-color: var(--creator-border) !important;
+  background: linear-gradient(180deg, var(--creator-tint), rgba(11, 17, 30, 0.62)) !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.26), 0 0 0 1px var(--creator-border) inset !important;
+}
+
+.creator-detail-view .creator-song-item--group-love:hover .creator-song-link,
+.creator-detail-view .creator-song-item--group-me:hover .creator-song-link,
+.creator-detail-view .creator-song-item--group-joy:hover .creator-song-link,
+.creator-detail-view .creator-song-item--group-all:hover .creator-song-link {
+  color: var(--creator-accent) !important;
+}
+
+/* relation card */
+.creator-detail-view .creator-collab-card {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(12, 18, 32, 0.56) !important;
+}
+
+.creator-detail-view .creator-collab-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(255, 255, 255, 0.05) inset !important;
+  background: rgba(16, 24, 40, 0.68) !important;
+}
+
+.creator-detail-view .creator-collab-card:hover .creator-collab-head strong {
+  color: #f3f7ff !important;
+}
+
+/* relation cards: normal neutral / hover accent */
+.creator-detail-view .creator-collab-card--group-love,
+.creator-detail-view .creator-collab-card--group-me,
+.creator-detail-view .creator-collab-card--group-joy,
+.creator-detail-view .creator-collab-card--group-all {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  background: rgba(12, 18, 32, 0.54) !important;
+}
+
+.creator-detail-view .creator-collab-card--group-love:hover {
+  border-color: rgba(244, 114, 182, 0.26) !important;
+  background: linear-gradient(180deg, rgba(244, 114, 182, 0.08), rgba(12, 18, 32, 0.6)) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(244, 114, 182, 0.15) inset !important;
+}
+.creator-detail-view .creator-collab-card--group-love:hover .creator-collab-head strong { color: rgba(255, 172, 216, 0.97) !important; }
+
+.creator-detail-view .creator-collab-card--group-me:hover {
+  border-color: rgba(52, 211, 153, 0.26) !important;
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.08), rgba(12, 18, 32, 0.6)) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(52, 211, 153, 0.15) inset !important;
+}
+.creator-detail-view .creator-collab-card--group-me:hover .creator-collab-head strong { color: rgba(150, 236, 201, 0.97) !important; }
+
+.creator-detail-view .creator-collab-card--group-joy:hover {
+  border-color: rgba(251, 191, 36, 0.28) !important;
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.09), rgba(12, 18, 32, 0.6)) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(251, 191, 36, 0.15) inset !important;
+}
+.creator-detail-view .creator-collab-card--group-joy:hover .creator-collab-head strong { color: rgba(255, 222, 138, 0.98) !important; }
+
+.creator-detail-view .creator-collab-card--group-all:hover {
+  border-color: rgba(157, 178, 255, 0.28) !important;
+  background: linear-gradient(180deg, rgba(157, 178, 255, 0.08), rgba(12, 18, 32, 0.6)) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(157, 178, 255, 0.15) inset !important;
+}
+.creator-detail-view .creator-collab-card--group-all:hover .creator-collab-head strong { color: rgba(198, 213, 255, 0.97) !important; }
+
+/* relation card border inversion: normal accent border / hover neutral border */
+.creator-detail-view .creator-collab-card--group-love {
+  border-color: rgba(244, 114, 182, 0.22) !important;
+}
+.creator-detail-view .creator-collab-card--group-me {
+  border-color: rgba(52, 211, 153, 0.22) !important;
+}
+.creator-detail-view .creator-collab-card--group-joy {
+  border-color: rgba(251, 191, 36, 0.24) !important;
+}
+.creator-detail-view .creator-collab-card--group-all {
+  border-color: rgba(157, 178, 255, 0.24) !important;
+}
+
+.creator-detail-view .creator-collab-card--group-love:hover,
+.creator-detail-view .creator-collab-card--group-me:hover,
+.creator-detail-view .creator-collab-card--group-joy:hover,
+.creator-detail-view .creator-collab-card--group-all:hover {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* relation sample song chips: subtle group tint + hover accent */
+.creator-detail-view .creator-collab-song {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: rgba(237, 243, 255, 0.88) !important;
+  transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.creator-detail-view .creator-collab-song--love {
+  border-color: rgba(244, 114, 182, 0.22) !important;
+  background: rgba(244, 114, 182, 0.06) !important;
+}
+.creator-detail-view .creator-collab-song--me {
+  border-color: rgba(52, 211, 153, 0.22) !important;
+  background: rgba(52, 211, 153, 0.06) !important;
+}
+.creator-detail-view .creator-collab-song--joy {
+  border-color: rgba(251, 191, 36, 0.24) !important;
+  background: rgba(251, 191, 36, 0.07) !important;
+}
+.creator-detail-view .creator-collab-song--all {
+  border-color: rgba(157, 178, 255, 0.24) !important;
+  background: rgba(157, 178, 255, 0.07) !important;
+}
+
+.creator-detail-view .creator-collab-card:hover .creator-collab-song--love { color: rgba(255, 170, 215, 0.96) !important; }
+.creator-detail-view .creator-collab-card:hover .creator-collab-song--me { color: rgba(144, 235, 198, 0.96) !important; }
+.creator-detail-view .creator-collab-card:hover .creator-collab-song--joy { color: rgba(255, 222, 137, 0.97) !important; }
+.creator-detail-view .creator-collab-card:hover .creator-collab-song--all { color: rgba(198, 213, 255, 0.97) !important; }
+
+/* timeline row/chip */
+.creator-detail-view .creator-timeline-item,
+.creator-detail-view .creator-timeline-chip {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(10, 16, 28, 0.56) !important;
+}
+
+.creator-detail-view .creator-timeline-item:hover,
+.creator-detail-view .creator-timeline-chip:hover {
+  transform: translateY(-1px);
+}
+
+.creator-detail-view .creator-timeline-item--group-love:hover,
+.creator-detail-view .creator-timeline-chip--group-love:hover,
+.creator-detail-view .creator-timeline-item--group-me:hover,
+.creator-detail-view .creator-timeline-chip--group-me:hover,
+.creator-detail-view .creator-timeline-item--group-joy:hover,
+.creator-detail-view .creator-timeline-chip--group-joy:hover,
+.creator-detail-view .creator-timeline-item--group-all:hover,
+.creator-detail-view .creator-timeline-chip--group-all:hover {
+  border-color: var(--creator-border) !important;
+  background: linear-gradient(180deg, var(--creator-tint), rgba(11, 17, 30, 0.62)) !important;
+  box-shadow: 0 7px 16px rgba(0, 0, 0, 0.24), 0 0 0 1px var(--creator-border) inset !important;
+}
+
+.creator-detail-view .creator-timeline-item--group-love:hover .creator-timeline-title,
+.creator-detail-view .creator-timeline-chip--group-love:hover .creator-timeline-chip-title { color: rgba(255, 166, 212, 0.96) !important; }
+.creator-detail-view .creator-timeline-item--group-me:hover .creator-timeline-title,
+.creator-detail-view .creator-timeline-chip--group-me:hover .creator-timeline-chip-title { color: rgba(140, 236, 197, 0.96) !important; }
+.creator-detail-view .creator-timeline-item--group-joy:hover .creator-timeline-title,
+.creator-detail-view .creator-timeline-chip--group-joy:hover .creator-timeline-chip-title { color: rgba(255, 220, 132, 0.97) !important; }
+.creator-detail-view .creator-timeline-item--group-all:hover .creator-timeline-title,
+.creator-detail-view .creator-timeline-chip--group-all:hover .creator-timeline-chip-title { color: rgba(194, 211, 255, 0.97) !important; }
+
+/* ================================================================
+   Phase A-6: spacing / rhythm / density unification
+   scope: releases / calls / creator detail
+   ================================================================ */
+
+/* 1) section spacing */
+#releases,
+#calls,
+.creator-detail-view :is(.creator-archive-section, .creator-collab-section, .creator-timeline-section) {
+  margin-top: clamp(40px, 4vw, 56px);
+}
+
+#releases .section-head,
+#calls .section-head,
+.creator-detail-view .creator-detail-head {
+  margin-bottom: 16px;
+}
+
+#releases :is(.release-group-grid, .song-search-grid, .creator-grid),
+#calls :is(.call-pattern-list, .call-beginner-list),
+.creator-detail-view :is(.creator-song-list, .creator-collab-grid, .creator-timeline) {
+  gap: 12px;
+}
+
+/* 2) metadata baseline */
+#releases :is(.release-card-meta, .release-card-count, .creator-song-meta),
+#calls :is(.call-pattern-count, .call-pattern-more),
+.creator-detail-view :is(.creator-song-meta, .creator-timeline-chip-meta, .creator-collab-meta) {
+  line-height: 1.42;
+}
+
+#releases :is(.release-card-meta, .release-card-count) span,
+.creator-detail-view :is(.creator-song-meta span, .creator-collab-meta span, .creator-timeline-chip-meta span) {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 3) divider opacity */
+#releases :is(.release-group-head, .detail-release-songs .section-head),
+#calls :is(.section-head--compact, .call-filter-row),
+.creator-detail-view :is(.creator-detail-head, .creator-timeline-year-head) {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.creator-detail-view :is(.creator-song-item, .creator-collab-card, .creator-timeline-chip, .creator-timeline-item),
+#releases :is(.release-card, .song-search-card),
+#calls :is(.call-pattern-card, .call-pattern-song, .call-beginner-song) {
+  border-color: color-mix(in srgb, var(--border) 72%, rgba(255, 255, 255, 0.08) 28%);
+}
+
+/* 4) hover rhythm */
+:where(
+  #releases .release-card,
+  #releases .song-search-card,
+  #calls .call-pattern-song,
+  #calls .call-beginner-song,
+  .creator-detail-view .creator-song-item,
+  .creator-detail-view .creator-collab-card,
+  .creator-detail-view .creator-timeline-chip,
+  .creator-detail-view .creator-timeline-item
+) {
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease,
+    color 200ms ease,
+    transform 200ms ease;
+}
+
+:where(
+  #releases .release-card:hover,
+  #releases .song-search-card:hover,
+  #calls .call-pattern-song:hover,
+  #calls .call-beginner-song:hover,
+  .creator-detail-view .creator-song-item:hover,
+  .creator-detail-view .creator-collab-card:hover,
+  .creator-detail-view .creator-timeline-chip:hover,
+  .creator-detail-view .creator-timeline-item:hover
+) {
+  transform: translateY(-1px);
+}
+
+/* 5) card padding density (compact / normal) */
+#calls :is(.call-pattern-song, .call-beginner-song),
+.creator-detail-view :is(.creator-role-row .creator-compact-role-pill, .creator-role-row .creator-compact-role-pill-text) {
+  padding: 0 10px;
+}
+
+#releases .release-card,
+#calls .call-pattern-card,
+.creator-detail-view :is(.creator-song-item, .creator-collab-card, .creator-timeline-chip) {
+  padding: 14px;
+}
+
+/* 6) timeline decorative line soften */
+.creator-detail-view .creator-timeline-year::before,
+.creator-detail-view .creator-timeline-chip::before,
+.creator-detail-view .creator-timeline-item::before {
+  opacity: 0.56;
+}
+
+/* 7) search density */
+#releases .song-search-grid,
+#releases .creator-grid,
+#releases .release-call-grid,
+#calls #callPatternList {
+  row-gap: 12px;
+}
+
+#releases :is(.song-search-card, .release-card),
+#calls :is(.call-pattern-song, .call-beginner-song) {
+  min-height: 40px;
+}
+
+/* ================================================================
+   Card-hover synchronized title accent (A-6 follow-up)
+   ================================================================ */
+.release-card--group-love:is(:hover, :focus-within) .release-title-link h3,
+.song-card--group-love:is(:hover, :focus-within) .song-card-title-link h3,
+.song-search-card--group-love:is(:hover, :focus-within) .song-card-title-link h3,
+.creator-song-item--group-love:is(:hover, :focus-within) .creator-song-link,
+.detail-release-songs .creator-song-item--group-love:is(:hover, :focus-within) .creator-song-link,
+.related-card--group-love:is(:hover, :focus-within) .related-title,
+.creator-detail-view .creator-timeline-item--group-love:is(:hover, :focus-within) .creator-timeline-title,
+.creator-detail-view .creator-timeline-chip--group-love:is(:hover, :focus-within) .creator-timeline-chip-title {
+  color: var(--pink) !important;
+}
+
+.release-card--group-me:is(:hover, :focus-within) .release-title-link h3,
+.song-card--group-me:is(:hover, :focus-within) .song-card-title-link h3,
+.song-search-card--group-me:is(:hover, :focus-within) .song-card-title-link h3,
+.creator-song-item--group-me:is(:hover, :focus-within) .creator-song-link,
+.detail-release-songs .creator-song-item--group-me:is(:hover, :focus-within) .creator-song-link,
+.related-card--group-me:is(:hover, :focus-within) .related-title,
+.creator-detail-view .creator-timeline-item--group-me:is(:hover, :focus-within) .creator-timeline-title,
+.creator-detail-view .creator-timeline-chip--group-me:is(:hover, :focus-within) .creator-timeline-chip-title {
+  color: var(--green) !important;
+}
+
+.release-card--group-joy:is(:hover, :focus-within) .release-title-link h3,
+.song-card--group-joy:is(:hover, :focus-within) .song-card-title-link h3,
+.song-search-card--group-joy:is(:hover, :focus-within) .song-card-title-link h3,
+.creator-song-item--group-joy:is(:hover, :focus-within) .creator-song-link,
+.detail-release-songs .creator-song-item--group-joy:is(:hover, :focus-within) .creator-song-link,
+.related-card--group-joy:is(:hover, :focus-within) .related-title,
+.creator-detail-view .creator-timeline-item--group-joy:is(:hover, :focus-within) .creator-timeline-title,
+.creator-detail-view .creator-timeline-chip--group-joy:is(:hover, :focus-within) .creator-timeline-chip-title {
+  color: var(--yellow) !important;
+}
+
+.release-card--group-all:is(:hover, :focus-within) .release-title-link h3,
+.song-card--group-all:is(:hover, :focus-within) .song-card-title-link h3,
+.song-search-card--group-all:is(:hover, :focus-within) .song-card-title-link h3,
+.creator-song-item--group-all:is(:hover, :focus-within) .creator-song-link,
+.detail-release-songs .creator-song-item--group-all:is(:hover, :focus-within) .creator-song-link,
+.related-card--group-all:is(:hover, :focus-within) .related-title,
+.creator-detail-view .creator-timeline-item--group-all:is(:hover, :focus-within) .creator-timeline-title,
+.creator-detail-view .creator-timeline-chip--group-all:is(:hover, :focus-within) .creator-timeline-chip-title {
+  color: #bfd0ff !important;
+}
+
+/* nav is text-first */
+.global-nav a {
+  gap: 0 !important;
+}
+
+/* credit labels are primary, icon is minimal assist */
+.detail-view .credits-list dt .ui-icon {
+  width: 12px !important;
+  height: 12px !important;
+  min-width: 12px !important;
+  min-height: 12px !important;
+  flex: 0 0 12px !important;
+  opacity: 0.5 !important;
+}
+
+.detail-view .credits-list dt {
+  gap: 5px !important;
+}
+
+/* ===== Phase A-5: creators page card border state inversion ===== */
+#creators .creator-card {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(12, 18, 32, 0.56) !important;
+  box-shadow: none !important;
+  transition: border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease, transform 200ms ease;
+}
+
+#creators .creator-card:hover,
+#creators .creator-card:focus-within {
+  transform: translateY(-1px);
+}
+
+/* normal state: keep quiet even for highlighted cards */
+#creators .creator-card--major,
+#creators .creator-card--active,
+#creators .creator-card--producer {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(12, 18, 32, 0.58) !important;
+  box-shadow: none !important;
+}
+
+/* hover state: unified neutral-accent (non-group color) */
+#creators .creator-card--group-love:hover,
+#creators .creator-card--group-love:focus-within,
+#creators .creator-card--group-me:hover,
+#creators .creator-card--group-me:focus-within,
+#creators .creator-card--group-joy:hover,
+#creators .creator-card--group-joy:focus-within,
+#creators .creator-card--group-all:hover,
+#creators .creator-card--group-all:focus-within {
+  border-color: rgba(157, 178, 255, 0.32) !important;
+  background: linear-gradient(180deg, rgba(157, 178, 255, 0.07), rgba(12, 18, 32, 0.62)) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(157, 178, 255, 0.12) inset !important;
+}
+
+/* title/cta accent only on hover (unified) */
+#creators .creator-card .creator-card-head strong,
+#creators .creator-card .creator-open {
+  transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease, box-shadow 200ms ease;
+}
+#creators .creator-card:is(:hover, :focus-within) .creator-card-head strong {
+  color: rgba(200, 215, 255, 0.96) !important;
+}
+
+#creators .creator-card:is(:hover, :focus-within) .creator-open {
+  border-color: rgba(157, 178, 255, 0.3) !important;
+  color: rgba(205, 219, 255, 0.95) !important;
+  background: rgba(157, 178, 255, 0.09) !important;
+}
+
+/* ===== Restore hero linked hover expansion (group card / quick link hover) ===== */
+body:has(#home .group-intro-card--love:hover) #homeHero .hero-title-highlight,
+body:has(#home .home-link-card:nth-of-type(1):hover) #homeHero .hero-title-highlight {
+  background: linear-gradient(135deg, #ff72bf 0%, #d08cff 62%, #9eb8ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+body:has(#home .group-intro-card--me:hover) #homeHero .hero-title-highlight,
+body:has(#home .home-link-card:nth-of-type(2):hover) #homeHero .hero-title-highlight {
+  background: linear-gradient(135deg, #47e3ae 0%, #68e89e 62%, #9fc7ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+body:has(#home .group-intro-card--joy:hover) #homeHero .hero-title-highlight,
+body:has(#home .home-link-card:nth-of-type(3):hover) #homeHero .hero-title-highlight {
+  background: linear-gradient(135deg, #ffd95c 0%, #ffcb47 62%, #a9c4ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ===== CTA hover isolation: react only when CTA itself is hovered ===== */
+#home .group-intro-card--love:hover .call-index-link:not(:hover):not(:focus-visible),
+#home .group-intro-card--me:hover .call-index-link:not(:hover):not(:focus-visible),
+#home .group-intro-card--joy:hover .call-index-link:not(:hover):not(:focus-visible) {
+  border-color: rgba(255,255,255,.16) !important;
+  box-shadow: none !important;
+  background: rgba(10,16,26,.58) !important;
+  color: #e5edf9 !important;
+}
+
+/* call page note: isolated removable block */
+#calls .call-maintenance-note {
+  margin: 4px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(167, 186, 223, 0.14);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(154, 178, 216, 0.07), rgba(154, 178, 216, 0.03)),
+    rgba(10, 16, 30, 0.42);
+  color: rgba(221, 231, 250, 0.78);
+  font-size: 12.5px;
+  line-height: 1.65;
+  letter-spacing: 0.01em;
+}
+
+#calls .call-maintenance-note p {
+  margin: 0;
+}
+
+/* ===== creator relation border inversion (final override) ===== */
+.creator-detail-view .creator-collab-card--group-love {
+  border-color: rgba(244, 114, 182, 0.22) !important;
+}
+.creator-detail-view .creator-collab-card--group-me {
+  border-color: rgba(52, 211, 153, 0.22) !important;
+}
+.creator-detail-view .creator-collab-card--group-joy {
+  border-color: rgba(251, 191, 36, 0.24) !important;
+}
+.creator-detail-view .creator-collab-card--group-all {
+  border-color: rgba(157, 178, 255, 0.24) !important;
+}
+.creator-detail-view .creator-collab-card--group-love:hover,
+.creator-detail-view .creator-collab-card--group-me:hover,
+.creator-detail-view .creator-collab-card--group-joy:hover,
+.creator-detail-view .creator-collab-card--group-all:hover {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* ===== top hero text: link accent to other hover triggers too ===== */

@@ -45,6 +45,17 @@ function renderInternalCreatorLinks(names) {
     .join(" / ");
 }
 
+function uiIcon(name, extraClass = "") {
+  const cls = `ui-icon ${extraClass}`.trim();
+  return `<svg class="${cls}" aria-hidden="true"><use href="#icon-${name}"></use></svg>`;
+}
+
+function isImeComposing(event) {
+  if (!event) return false;
+  const nativeEvent = event.nativeEvent || event;
+  return Boolean(event.isComposing || nativeEvent?.isComposing || nativeEvent?.keyCode === 229);
+}
+
 // ----------------------------------------------------------------
 // ルーター本体
 // ----------------------------------------------------------------
@@ -55,6 +66,10 @@ function getRouteId() {
 
 function getRouteRelease() {
   return new URLSearchParams(location.search).get("release");
+}
+
+function getRouteCreator() {
+  return new URLSearchParams(location.search).get("creator");
 }
 
 function getRouteQuery() {
@@ -89,6 +104,9 @@ function buildNavState(extra = {}) {
 const INTERNAL_HISTORY_KEY = "ikonoijoy:internalHistoryStack";
 const HISTORY_DEBUG = true;
 const DEBUG_CALLS = false;
+const CREATOR_RELATION_EXCLUDE = new Set(["指原莉乃"]);
+const CREATOR_RELATION_MIN_COUNT = 2;
+const CREATOR_RELATION_SECTION_HIDE_FOR = new Set(["指原莉乃"]);
 let listMainClickHandler = null;
 let releaseDetailMainClickHandler = null;
 let detailMainClickHandler = null;
@@ -208,6 +226,23 @@ function resolveAmbientAccent() {
     }
   }
 
+  const creatorRoute = getRouteCreator();
+  if (creatorRoute) {
+    const creatorName = resolveCreatorNameFromRoute(creatorRoute);
+    if (creatorName) {
+      const relatedSongs = songsForCreator(creatorName);
+      if (relatedSongs.length) {
+        const counts = relatedSongs.reduce((acc, song) => {
+          const key = normalizeAccentKey(song.group || "all");
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {});
+        const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+        if (dominant) return dominant;
+      }
+    }
+  }
+
   const view = getRouteView();
   if (view === 'releases') return normalizeAccentKey(state.releaseGroupFilter || getRouteGroup());
   if (view === 'calls') return normalizeAccentKey(state.callGroupFilter || 'all');
@@ -221,7 +256,8 @@ function syncAmbientAccent() {
 function syncRouteScroll() {
   const id = getRouteId();
   const release = getRouteRelease();
-  if (!(id || release)) return;
+  const creator = getRouteCreator();
+  if (!(id || release || creator)) return;
   if (id && location.hash === "#call") {
     requestAnimationFrame(() => {
       document.querySelector("#call")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -239,6 +275,7 @@ function ensureHistoryState() {
   const initialState = buildNavState({
     id: params.get("id") || "",
     release: params.get("release") || "",
+    creator: params.get("creator") || "",
     view: params.get("view") || getRouteView(),
     hash: location.hash || "",
   });
@@ -250,10 +287,13 @@ function dispatch() {
   syncFloatingSearchFromRoute();
   const id = getRouteId();
   const release = getRouteRelease();
+  const creator = getRouteCreator();
   if (id) {
     mountDetailView(id);
   } else if (release) {
     mountReleaseDetailView(release);
+  } else if (creator) {
+    mountCreatorDetailView(creator);
   } else {
     mountListView(getRouteView());
   }
@@ -383,10 +423,11 @@ function makeSongCard(song) {
   const hasMix = song.hasCall;
   const release = releaseDisplayTitle(song.release?.title || "") || "リリース未登録";
   const releaseSub = song.release ? [song.release.date].filter(Boolean).join(" / ") : "";
-  const cardClass = `song-card${hasMix ? " song-card--has-mix" : ""}`;
+  const groupClass = `song-card--group-${song.group || "all"}`;
+  const cardClass = `song-card ${groupClass}${hasMix ? " song-card--has-mix" : ""}`;
   const callRow = hasMix
     ? `<div class="song-call-row">
-        <span class="call-presence">📣 コールあり (${song.callNotes.length})</span>
+        <span class="call-presence">${uiIcon("megaphone", "ui-icon--xs")} コールあり (${song.callNotes.length})</span>
         <a class="call-direct-link" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">コールへ移動</a>
       </div>`
     : `<div class="song-call-row"><span class="call-presence call-presence--none">コール未登録</span></div>`;
@@ -700,7 +741,7 @@ function renderSongSearchCards(targetId, countId, query, groupFilter = "all") {
   container.innerHTML = results
     .sort((a, b) => (b.release?.date || "").localeCompare(a.release?.date || "") || a.title.localeCompare(b.title, "ja"))
     .map((song) => `
-      <article class="song-search-card">
+      <article class="song-search-card song-search-card--group-${song.group || "all"}">
         <div class="song-search-top">
           <a class="song-card-title-link" href="?id=${song.id}" data-song-id="${song.id}"><h3>${song.title}</h3></a>
           <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
@@ -709,7 +750,7 @@ function renderSongSearchCards(targetId, countId, query, groupFilter = "all") {
         <div class="song-search-badges">
           <span class="tag">${song.songType === "all" ? "イコノイジョイ" : songTypeLabel(song)}</span>
           ${song.performer && song.songType !== "solo" && song.songType !== "all" ? `<span class="tag">${song.performer}</span>` : ""}
-          ${song.hasCall ? `<span class="tag">📣 コールあり</span>` : ""}
+          ${song.hasCall ? `<span class="tag">${uiIcon("megaphone", "ui-icon--xs")} コールあり</span>` : ""}
           ${song.hasCall ? `<a class="call-direct-link" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">コールへ移動</a>` : ""}
         </div>
       </article>
@@ -909,10 +950,10 @@ function renderReleases() {
                   : releaseSongs.slice(0, releaseSongLimit);
                 const hiddenCount = Math.max(0, releaseSongs.length - visibleSongs.length);
                 return `
-                  <article class="release-card release-card--${releaseTypeMeta.className}">
+                  <article class="release-card release-card--${releaseTypeMeta.className} release-card--group-${head.releaseGroup || head.group}" data-release-key="${encodeURIComponent(key)}">
                     <div class="release-card-head">
                       <div>
-                        <a class="release-title-link" href="?release=${encodeURIComponent(key)}" data-release-key="${encodeURIComponent(key)}"><h3>${releaseTitle(head)}</h3></a>
+                        <a class="release-title-link release-title-link--${head.releaseGroup || head.group}" href="?release=${encodeURIComponent(key)}" data-release-key="${encodeURIComponent(key)}"><h3>${releaseTitle(head)}</h3></a>
                         <p class="release-card-meta">
                           <span class="release-type ${releaseTypeMeta.className}">${releaseTypeMeta.label}</span>
                           <span>${head.release?.date || "日付未登録"}</span>
@@ -923,7 +964,7 @@ function renderReleases() {
                     <p class="release-card-count">${releaseSongs.length}曲収録</p>
                     <div class="release-song-list">
                       ${visibleSongs
-                        .map((song) => `<a class="release-song-link" href="?id=${song.id}" data-song-id="${song.id}">${song.title}</a>`)
+                        .map((song) => `<a class="release-song-link release-song-link--${song.group || "all"}" href="?id=${song.id}" data-song-id="${song.id}">${song.title}</a>`)
                         .join("")}
                       ${hiddenCount > 0 ? `<span class="release-song-more${releaseTypeMeta.className === "album" ? " album" : ""}">他${hiddenCount}曲</span>` : ""}
                     </div>
@@ -1012,7 +1053,13 @@ function renderCreators() {
         })
         .filter((song, index, arr) => arr.findIndex((s) => s.id === song.id || s.title === song.title) === index)
         .slice(0, 3);
-      return { name, songCount: info.songs.size, mainRoles, representativeSongs };
+      const groupCount = { love: 0, me: 0, joy: 0, all: 0 };
+      info.sampleSongs.forEach((song) => {
+        const g = song.group || "all";
+        if (groupCount[g] !== undefined) groupCount[g] += 1;
+      });
+      const dominantGroup = Object.entries(groupCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "all";
+      return { name, songCount: info.songs.size, mainRoles, representativeSongs, dominantGroup };
     })
     .sort((a, b) => b.songCount - a.songCount || a.name.localeCompare(b.name, "ja"));
 
@@ -1051,7 +1098,7 @@ function renderCreators() {
       : "";
 
     return `
-    <article class="creator-card ${highlightClass}" id="${creatorId(creator.name)}" data-creator-name="${creator.name}">
+    <article class="creator-card creator-card--group-${creator.dominantGroup || "all"} ${highlightClass}" id="${creatorId(creator.name)}" data-creator-name="${creator.name}">
       <div class="creator-card-head">
         <strong>${personUrl(creator.name) ? `<a class="creator-link" href="${personUrl(creator.name)}" target="_blank" rel="noreferrer">${creator.name}</a>` : creator.name}</strong>
         <span class="creator-count">${creator.songCount}曲</span>
@@ -1061,7 +1108,7 @@ function renderCreators() {
         producer
           ? ""
           : `<div class="creator-representative">
-              ${creator.representativeSongs.map((song) => `<a class="creator-song-chip" href="?id=${song.id}" data-song-id="${song.id}">${song.title}</a>`).join("")}
+              ${creator.representativeSongs.map((song) => `<a class="creator-song-chip creator-song-chip--${song.group || "all"}" href="?id=${song.id}" data-song-id="${song.id}">${song.title}</a>`).join("")}
             </div>`
       }
       <button class="creator-open" type="button" data-creator-name="${creator.name}">担当曲を開く</button>
@@ -1318,7 +1365,7 @@ function openCreatorDialog(name) {
             `
             )
             .join("")}
-          ${song.hasCall ? `<a class="tag mix-tag" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">📣 コールを見る</a>` : ""}
+          ${song.hasCall ? `<a class="tag mix-tag" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">${uiIcon("megaphone", "ui-icon--xs")} コールを見る</a>` : ""}
         </div>
       </article>
     `
@@ -1370,6 +1417,7 @@ function bindListEvents() {
       renderReleases();
     });
     homeSongSearchInput.addEventListener("keydown", (event) => {
+      if (isImeComposing(event)) return;
       if (event.key === "Enter") {
         event.preventDefault();
         state.releaseQuery = state.songQuery;
@@ -1519,6 +1567,9 @@ function bindListEvents() {
       return;
     }
 
+    // クリエイターリンク（外部URL）はそのまま通す
+    if (event.target.closest(".creator-link")) return;
+
     // 曲詳細へのナビゲーション（#call アンカー付きも対応）
     const songLink = event.target.closest("[data-song-id]");
     if (songLink) {
@@ -1529,20 +1580,48 @@ function bindListEvents() {
       return;
     }
 
-    // クリエイターリンク（外部URL）はそのまま通す
-    if (event.target.closest(".creator-link")) return;
-
-    const releaseLink = event.target.closest("[data-release-key]");
-    if (releaseLink) {
+    // data-song-id が無いリンクでも ?id= を拾って遷移
+    const hrefSongLink = event.target.closest("a[href*='?id=']");
+    if (hrefSongLink) {
       event.preventDefault();
-      pushInternalRoute(`?release=${releaseLink.dataset.releaseKey}`, { release: releaseLink.dataset.releaseKey });
-      return;
+      closeCreatorDialog();
+      const targetUrl = new URL(hrefSongLink.getAttribute("href"), location.href);
+      const songId = targetUrl.searchParams.get("id");
+      if (songId) {
+        navigateWithHash(songId, targetUrl.hash === "#call" ? "call" : "");
+        return;
+      }
     }
 
-    // クリエイターダイアログ
+    // 作品カード本体クリックは作品詳細へ（収録曲チップクリックは除外）
+    const releaseCard = event.target.closest(".release-card[data-release-key]");
+    if (releaseCard) {
+      event.preventDefault();
+      const releaseKey = releaseCard.dataset.releaseKey;
+      if (releaseKey) {
+        pushInternalRoute(`?release=${releaseKey}`, { release: releaseKey });
+        return;
+      }
+    }
+
+    // 作品リンク（タイトル等）
+    const releaseLink = event.target.closest("[data-release-key], a[href*='?release=']");
+    if (releaseLink) {
+      event.preventDefault();
+      const releaseKey = releaseLink.dataset.releaseKey
+        || new URL(releaseLink.getAttribute("href"), location.href).searchParams.get("release");
+      if (releaseKey) {
+        pushInternalRoute(`?release=${releaseKey}`, { release: releaseKey });
+        return;
+      }
+    }
+
+    // クリエイター詳細ページ
     const creatorButton = event.target.closest("[data-creator-name]");
     if (creatorButton) {
-      openCreatorDialog(creatorButton.dataset.creatorName);
+      const name = creatorButton.dataset.creatorName;
+      const cid = creatorId(name);
+      pushInternalRoute(`?creator=${encodeURIComponent(cid)}`, { creator: cid });
       return;
     }
 
@@ -1600,6 +1679,29 @@ function bindHeroToneControls() {
   applyHeroToneMode();
 }
 
+function syncHomeLatestReleaseMeta() {
+  const targets = [
+    { group: "love", id: "homeLatestLove" },
+    { group: "me", id: "homeLatestMe" },
+    { group: "joy", id: "homeLatestJoy" },
+  ];
+  const releases = groupedReleases();
+
+  targets.forEach(({ group, id }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const latest = releases.find((item) => (item.songs?.[0]?.releaseGroup || item.songs?.[0]?.group) === group);
+    const head = latest?.songs?.[0];
+    if (!head) {
+      el.textContent = "LATEST: 未登録";
+      return;
+    }
+    const title = releaseTitle(head);
+    const date = head.release?.date || head.releaseDate || "";
+    el.textContent = date ? `LATEST: ${title} (${date})` : `LATEST: ${title}`;
+  });
+}
+
 function renderListPage() {
   const sections = ["home", "releases", "creators", "calls"];
 
@@ -1611,6 +1713,7 @@ function renderListPage() {
   const hero = document.querySelector("#homeHero");
   if (hero) hero.hidden = state.page !== "home";
   if (state.page === "home") bindHeroToneControls();
+  syncHomeLatestReleaseMeta();
   const homeSearchCount = document.querySelector("#homeSearchCount");
   if (homeSearchCount && !state.songQuery) homeSearchCount.textContent = "";
 }
@@ -1639,7 +1742,8 @@ function bindHeroToneGlobalDelegate() {
 function syncGlobalNav() {
   const id = getRouteId();
   const release = getRouteRelease();
-  const activeView = id ? null : release ? "releases" : getRouteView();
+  const creator = getRouteCreator();
+  const activeView = id ? null : release ? "releases" : creator ? "creators" : getRouteView();
   document.querySelectorAll("[data-view-link]").forEach((link) => {
     link.classList.toggle("active", !id && link.dataset.viewLink === activeView);
   });
@@ -1693,7 +1797,7 @@ function mountReleaseDetailView(routeKey) {
   });
   const head = releaseSongs[0];
   document.querySelector("main").innerHTML = `
-    <div class="detail-view">
+    <div class="detail-view" data-song-group="${head.releaseGroup || head.group || "all"}">
       <nav class="detail-nav">
         <a href="?view=releases" class="back-link" data-back-releases>← 作品一覧に戻る</a>
         <span class="detail-breadcrumb"><span class="group-badge ${head.releaseGroup || head.group}">${groupLabels[head.releaseGroup || head.group]}</span></span>
@@ -1710,17 +1814,15 @@ function mountReleaseDetailView(routeKey) {
           ${releaseSongs
             .map(
               (song) => `
-            <article class="creator-song-item">
+            <article class="creator-song-item creator-song-item--group-${song.group || "all"}" data-song-id="${song.id}">
               <div class="creator-song-title">
-                <a class="creator-song-link" href="?id=${song.id}" data-song-id="${song.id}">${Number.isFinite(song.trackNumber) ? `${song.trackNumber}. ` : ""}${song.title}</a>
+                <a class="creator-song-link creator-song-link--${song.group || "all"} track-title" href="?id=${song.id}" data-song-id="${song.id}">${Number.isFinite(song.trackNumber) ? `${song.trackNumber}. ` : ""}${song.title}</a>
                 <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
               </div>
-              <div class="creator-role-row">
-                <span class="role-pill">作詞: ${song.lyricists?.join(" / ") || "未登録"}</span>
-                <span class="role-pill">作曲: ${song.composers?.join(" / ") || "未登録"}</span>
-                <span class="role-pill">編曲: ${song.arrangers?.join(" / ") || "未登録"}</span>
-                ${song.hasCall ? `<a class="tag mix-tag" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">📣 コールあり</a>` : ""}
-                <span class="tag">${song.songType === "all" ? "イコノイジョイ" : songTypeLabel(song)}</span>
+              <div class="song-credit-inline">
+                <span class="credit-item">作詞: ${song.lyricists?.join(" / ") || "未登録"}</span>
+                <span class="credit-item">作曲: ${song.composers?.join(" / ") || "未登録"}</span>
+                <span class="credit-item">編曲: ${song.arrangers?.join(" / ") || "未登録"}</span>
               </div>
             </article>
           `
@@ -1748,6 +1850,478 @@ function mountReleaseDetailView(routeKey) {
     }
   };
   mainEl.addEventListener("click", releaseDetailMainClickHandler);
+}
+
+function resolveCreatorNameFromRoute(routeCreator) {
+  if (!routeCreator) return "";
+  const decoded = decodeURIComponent(routeCreator);
+  const names = new Set(
+    songs.flatMap((song) => [...song.lyricists, ...song.composers, ...song.arrangers]).filter(Boolean)
+  );
+  return [...names].find((name) => creatorId(name) === decoded) || "";
+}
+
+function mountCreatorDetailView(routeCreator) {
+  const creatorName = resolveCreatorNameFromRoute(routeCreator);
+  if (!creatorName) {
+    document.querySelector("main").innerHTML = `
+      <div class="detail-not-found">
+        <p>クリエイターが見つかりませんでした。</p>
+        <a href="?view=creators" class="back-link">← クリエイター一覧に戻る</a>
+      </div>
+    `;
+    return;
+  }
+
+  const relatedSongs = songsForCreator(creatorName).sort((a, b) => {
+    const dateSort = (b.release?.date || "").localeCompare(a.release?.date || "");
+    if (dateSort) return dateSort;
+    return a.title.localeCompare(b.title, "ja");
+  });
+  const roleCountMap = relatedSongs.reduce(
+    (acc, song) => {
+      if (song.lyricists.includes(creatorName)) acc["作詞"] += 1;
+      if (song.composers.includes(creatorName)) acc["作曲"] += 1;
+      if (song.arrangers.includes(creatorName)) acc["編曲"] += 1;
+      return acc;
+    },
+    { 作詞: 0, 作曲: 0, 編曲: 0 }
+  );
+  const roleSummary = Object.entries(roleCountMap)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([role, count]) => `${role} ${count}`)
+    .join(" / ") || "担当情報あり";
+  const roleLabels = Object.entries(roleCountMap)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([role]) => role);
+  const groupCountMap = relatedSongs.reduce((acc, song) => {
+    const key = song.group || "all";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const groupStatOrder = ["love", "me", "joy", "all"];
+  const groupStats = groupStatOrder
+    .filter((group) => groupCountMap[group] > 0)
+    .map(
+      (group) => `
+        <span class="tag creator-group-stat creator-group-stat--${group}">
+          <span class="creator-group-stat-name">${groupLabels[group]}</span>
+          <span class="creator-group-stat-count">${groupCountMap[group]}曲</span>
+        </span>
+      `
+    )
+    .join("");
+  const participationYears = relatedSongs
+    .map((song) => String(song.release?.date || "").slice(0, 4))
+    .filter((year) => /^\d{4}$/.test(year))
+    .sort();
+  const firstYear = participationYears[0] || "";
+  const latestYear = participationYears[participationYears.length - 1] || "";
+  const dominantGroup =
+    Object.entries(
+      relatedSongs.reduce((acc, song) => {
+        const g = normalizeAccentKey(song.group || "all");
+        acc[g] = (acc[g] || 0) + 1;
+        return acc;
+      }, {})
+    ).sort((a, b) => b[1] - a[1])[0]?.[0] || "all";
+
+  const collaborators = (() => {
+    const map = new Map();
+    relatedSongs.forEach((song) => {
+      const rolePairs = [
+        ...song.lyricists.map((name) => ({ name, role: "作詞" })),
+        ...song.composers.map((name) => ({ name, role: "作曲" })),
+        ...song.arrangers.map((name) => ({ name, role: "編曲" })),
+      ].filter(
+        (item) =>
+          item.name &&
+          item.name !== creatorName &&
+          !CREATOR_RELATION_EXCLUDE.has(item.name)
+      );
+
+      rolePairs.forEach(({ name, role }) => {
+        if (!map.has(name)) {
+          map.set(name, {
+            name,
+            count: 0,
+            roleCounts: { 作詞: 0, 作曲: 0, 編曲: 0 },
+            songs: [],
+          });
+        }
+        const row = map.get(name);
+        row.count += 1;
+        row.roleCounts[role] += 1;
+        row.songs.push(song);
+      });
+    });
+
+    return [...map.values()]
+      .map((row) => {
+        const roles = Object.entries(row.roleCounts)
+          .filter(([, count]) => count > 0)
+          .sort((a, b) => b[1] - a[1])
+          .map(([role]) => role);
+        const sampleSongs = [...row.songs]
+          .sort((a, b) => (b.release?.date || "").localeCompare(a.release?.date || "") || a.title.localeCompare(b.title, "ja"))
+          .filter((song, index, arr) => arr.findIndex((s) => s.id === song.id) === index)
+          .slice(0, 3);
+        return {
+          name: row.name,
+          count: row.count,
+          roles,
+          sampleSongs,
+        };
+      })
+      .filter((row) => row.count >= CREATOR_RELATION_MIN_COUNT)
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "ja"));
+  })();
+  const showCollaboratorsSection =
+    !CREATOR_RELATION_SECTION_HIDE_FOR.has(creatorName) && collaborators.length > 0;
+
+  const creatorTimeline = (() => {
+    const yearMap = new Map();
+    relatedSongs.forEach((song) => {
+      const rawDate = String(song.release?.date || "").trim();
+      const year = /^\d{4}/.test(rawDate) ? rawDate.slice(0, 4) : "年不明";
+      if (!yearMap.has(year)) yearMap.set(year, []);
+      yearMap.get(year).push(song);
+    });
+
+    const sortSongByDate = (a, b) => {
+      const dateSort = (b.release?.date || "").localeCompare(a.release?.date || "");
+      if (dateSort) return dateSort;
+      return a.title.localeCompare(b.title, "ja");
+    };
+
+    return [...yearMap.entries()]
+      .map(([year, list]) => ({
+        year,
+        songs: [...list].sort(sortSongByDate),
+      }))
+      .sort((a, b) => {
+        if (a.year === "年不明") return 1;
+        if (b.year === "年不明") return -1;
+        return b.year.localeCompare(a.year, "ja");
+      });
+  })();
+  const timelineInitialLimit = 6;
+
+  const creatorDetailState = {
+    role: "all",
+    group: "all",
+    sort: "new",
+    archiveCollapsed: false,
+  };
+
+  const syncArchiveCollapseUi = (rootEl) => {
+    const sectionEl = rootEl.querySelector("#creatorArchiveSection");
+    const toggleBtn = rootEl.querySelector("[data-creator-archive-toggle]");
+    if (!sectionEl || !toggleBtn) return;
+    sectionEl.classList.toggle("is-collapsed", creatorDetailState.archiveCollapsed);
+    toggleBtn.dataset.state = creatorDetailState.archiveCollapsed ? "closed" : "open";
+    toggleBtn.textContent = creatorDetailState.archiveCollapsed
+      ? "アーカイブを開く"
+      : "アーカイブを閉じる";
+  };
+
+  const sortSongs = (list, sortMode) =>
+    [...list].sort((a, b) => {
+      const dateA = a.release?.date || "";
+      const dateB = b.release?.date || "";
+      const byDate = sortMode === "old" ? dateA.localeCompare(dateB) : dateB.localeCompare(dateA);
+      if (byDate) return byDate;
+      return a.title.localeCompare(b.title, "ja");
+    });
+
+  const applyFilters = () => {
+    const roleKey = creatorDetailState.role;
+    const groupKey = creatorDetailState.group;
+    const filtered = relatedSongs.filter((song) => {
+      const roleOk =
+        roleKey === "all" ||
+        (roleKey === "作詞" && song.lyricists.includes(creatorName)) ||
+        (roleKey === "作曲" && song.composers.includes(creatorName)) ||
+        (roleKey === "編曲" && song.arrangers.includes(creatorName));
+      const groupOk =
+        groupKey === "all" ||
+        song.group === groupKey ||
+        (groupKey === "allgroup" && song.group === "all");
+      return roleOk && groupOk;
+    });
+    return sortSongs(filtered, creatorDetailState.sort);
+  };
+
+  const renderCreatorSongList = () => {
+    const target = document.querySelector("#creatorDetailSongList");
+    const countEl = document.querySelector("#creatorDetailSongCount");
+    if (!target) return;
+    const list = applyFilters();
+    if (countEl) countEl.textContent = `${list.length} SONGS`;
+    target.innerHTML = list.length
+      ? list
+          .map(
+            (song) => `
+              <article class="creator-song-item creator-song-item--group-${song.group || "all"}" data-song-id="${song.id}">
+                <div class="creator-song-title">
+                  <a class="creator-song-link creator-song-link--${song.group || "all"}" href="?id=${song.id}" data-song-id="${song.id}">${song.title}</a>
+                  <span class="group-badge ${song.group}">${groupLabels[song.group]}</span>
+                </div>
+                <p class="creator-song-meta">
+                  <span>${releaseDisplayTitle(song.release?.title || "") || "作品未登録"}</span>
+                  <span>${song.release?.date || "日付未登録"}</span>
+                </p>
+                <div class="creator-role-row">
+                  ${song.roles
+                    .map(
+                      (role) => `
+                        <span class="role-pill creator-compact-role-pill ${role.collaborative ? "co-role" : ""}">${role.label}${role.collaborative ? "(共作)" : ""}</span>
+                      `
+                    )
+                    .join("")}
+                ${song.hasCall ? `<a class="tag mix-tag" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">${uiIcon("megaphone", "ui-icon--xs")} コールを見る</a>` : ""}
+                </div>
+              </article>
+            `
+          )
+          .join("")
+      : `<p class="empty">条件に一致する参加楽曲はありません。</p>`;
+  };
+
+  document.querySelector("main").innerHTML = `
+    <div class="detail-view creator-detail-view" data-song-group="${dominantGroup}">
+      <nav class="detail-nav">
+        <a href="?view=creators" class="back-link" data-back-creators>← クリエイター一覧に戻る</a>
+      </nav>
+      <header class="detail-header creator-detail-hero">
+        <p class="detail-meta">CREATOR ARCHIVE</p>
+        <h1 class="detail-title">${creatorName}</h1>
+        <div class="creator-detail-role-row">
+          ${roleLabels.map((role) => `<span class="creator-role-chip">${role}</span>`).join("")}
+        </div>
+        <div class="creator-detail-stats">
+          <span class="tag">担当内訳: ${roleSummary}</span>
+          ${groupStats}
+          ${firstYear && latestYear ? `<span class="tag">参加年: ${firstYear} - ${latestYear}</span>` : ""}
+        </div>
+      </header>
+      <section class="detail-release-songs creator-archive-section" id="creatorArchiveSection">
+        <div class="creator-detail-head">
+          <div class="creator-detail-head-main">
+            <h2>参加楽曲アーカイブ</h2>
+            <button type="button" class="back-link back-link--mini" data-creator-archive-toggle data-state="open">アーカイブを閉じる</button>
+          </div>
+          <p id="creatorDetailSongCount" class="creator-detail-count">${relatedSongs.length} SONGS</p>
+        </div>
+        <div class="creator-detail-filters">
+          <div class="creator-filter-row">
+            <span class="creator-filter-label">役割</span>
+            <div class="creator-filter-pills">
+              <button type="button" class="release-filter active" data-creator-role-filter="all">すべて</button>
+              <button type="button" class="release-filter" data-creator-role-filter="作詞">作詞</button>
+              <button type="button" class="release-filter" data-creator-role-filter="作曲">作曲</button>
+              <button type="button" class="release-filter" data-creator-role-filter="編曲">編曲</button>
+            </div>
+          </div>
+          <div class="creator-filter-row">
+            <span class="creator-filter-label">グループ</span>
+            <div class="creator-filter-pills">
+              <button type="button" class="release-filter active" data-creator-group-filter="all">すべて</button>
+              <button type="button" class="release-filter filter-love" data-creator-group-filter="love">=LOVE</button>
+              <button type="button" class="release-filter filter-me" data-creator-group-filter="me">≠ME</button>
+              <button type="button" class="release-filter filter-joy" data-creator-group-filter="joy">≒JOY</button>
+              <button type="button" class="release-filter filter-allgroup" data-creator-group-filter="allgroup">イコノイジョイ</button>
+            </div>
+          </div>
+          <div class="creator-filter-row creator-filter-row--sort">
+            <span class="creator-filter-label">並び替え</span>
+            <div class="release-view-switch">
+              <button type="button" class="release-switch active" data-creator-sort="new">新しい順</button>
+              <button type="button" class="release-switch" data-creator-sort="old">古い順</button>
+            </div>
+          </div>
+        </div>
+        <div id="creatorDetailSongList" class="creator-song-list">
+          <!-- renderCreatorSongList() -->
+        </div>
+      </section>
+
+      ${showCollaboratorsSection ? `
+        <section class="detail-related creator-collab-section">
+          <div class="creator-detail-head">
+            <h2>よく組むクリエイター</h2>
+            <p class="creator-detail-count">${Math.min(collaborators.length, 8)} / ${collaborators.length} PEOPLE</p>
+          </div>
+          <div class="creator-collab-grid">
+            ${collaborators.slice(0, 8).map((item) => {
+              const cid = creatorId(item.name);
+              const collabGroupCount = item.sampleSongs.reduce((acc, song) => {
+                const key = song.group || "all";
+                acc[key] = (acc[key] || 0) + 1;
+                return acc;
+              }, {});
+              const collabDominantGroup =
+                Object.entries(collabGroupCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "all";
+              return `
+                <a class="creator-collab-card creator-collab-card--group-${collabDominantGroup}" href="?creator=${encodeURIComponent(cid)}" data-creator-route="${cid}">
+                  <div class="creator-collab-head">
+                    <strong>${item.name}</strong>
+                    <span class="tag">${item.count}回</span>
+                  </div>
+                  <p class="creator-collab-meta">
+                    ${(item.roles.length ? item.roles : ["担当あり"]).map((role) => `<span class="creator-collab-role creator-compact-role-pill">${role}</span>`).join("")}
+                  </p>
+                  <div class="creator-collab-songs">
+                    ${item.sampleSongs.map((song) => `<span class="creator-collab-song creator-collab-song--${song.group || "all"}">${song.title}</span>`).join("")}
+                  </div>
+                </a>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      ` : ""}
+
+      ${creatorTimeline.length ? `
+        <section class="detail-related creator-timeline-section">
+          <div class="creator-detail-head">
+            <h2>参加曲タイムライン</h2>
+            <p class="creator-detail-count">CREATOR TIMELINE</p>
+          </div>
+          <div class="creator-timeline">
+            ${creatorTimeline
+              .map(
+                (entry) => `
+                  <article class="creator-timeline-year">
+                    <header class="creator-timeline-year-head">
+                      <h3>${entry.year}</h3>
+                      <span class="tag">${entry.songs.length}曲</span>
+                    </header>
+                    <div class="creator-timeline-songs">
+                      ${entry.songs
+                        .map((song, index) => `
+                          <a class="creator-timeline-chip creator-timeline-chip--group-${song.group || "all"}" href="?id=${song.id}" data-song-id="${song.id}" ${index >= timelineInitialLimit ? `hidden data-timeline-extra="1" data-timeline-year="${entry.year}"` : ""}>
+                            <span class="group-badge ${song.group || "all"}">${groupLabels[song.group] || "イコノイジョイ"}</span>
+                            <span class="creator-timeline-chip-title">${song.title}</span>
+                            <span class="creator-timeline-chip-meta">
+                              <span class="creator-timeline-chip-role creator-compact-role-pill-text">${song.roles.map((role) => role.label).join(" / ") || "担当あり"}</span>
+                              <span class="creator-timeline-chip-date">${song.release?.date || "日付未登録"}</span>
+                            </span>
+                          </a>
+                        `)
+                        .join("")}
+                      ${entry.songs.length > timelineInitialLimit ? `
+                        <div class="creator-timeline-controls">
+                          <button
+                            type="button"
+                            class="back-link back-link--mini"
+                            data-timeline-toggle-year="${entry.year}"
+                            data-expanded="0"
+                            data-label-more="さらに表示"
+                            data-label-less="折りたたむ"
+                          >さらに表示</button>
+                        </div>
+                      ` : ""}
+                    </div>
+                  </article>
+                `
+              )
+              .join("")}
+          </div>
+        </section>
+      ` : ""}
+    </div>
+  `;
+
+  clearMainClickHandlers();
+  const mainEl = document.querySelector("main");
+  if (releaseDetailMainClickHandler) mainEl.removeEventListener("click", releaseDetailMainClickHandler);
+  releaseDetailMainClickHandler = (event) => {
+    const songLink = event.target.closest("[data-song-id]");
+    if (songLink) {
+      event.preventDefault();
+      const hash = songLink.dataset.hash || "";
+      navigateWithHash(songLink.dataset.songId, hash);
+      return;
+    }
+    if (event.target.closest("[data-back-creators]")) {
+      event.preventDefault();
+      navigateView("creators");
+      return;
+    }
+
+    const creatorRouteLink = event.target.closest("[data-creator-route]");
+    if (creatorRouteLink) {
+      event.preventDefault();
+      const cid = creatorRouteLink.dataset.creatorRoute;
+      if (cid) pushInternalRoute(`?creator=${encodeURIComponent(cid)}`, { creator: cid });
+      return;
+    }
+
+    const roleFilterBtn = event.target.closest("[data-creator-role-filter]");
+    if (roleFilterBtn) {
+      event.preventDefault();
+      creatorDetailState.role = roleFilterBtn.dataset.creatorRoleFilter || "all";
+      mainEl.querySelectorAll("[data-creator-role-filter]").forEach((btn) => {
+        btn.classList.toggle("active", btn === roleFilterBtn);
+      });
+      renderCreatorSongList();
+      return;
+    }
+
+    const groupFilterBtn = event.target.closest("[data-creator-group-filter]");
+    if (groupFilterBtn) {
+      event.preventDefault();
+      creatorDetailState.group = groupFilterBtn.dataset.creatorGroupFilter || "all";
+      mainEl.querySelectorAll("[data-creator-group-filter]").forEach((btn) => {
+        btn.classList.toggle("active", btn === groupFilterBtn);
+      });
+      renderCreatorSongList();
+      return;
+    }
+
+    const sortBtn = event.target.closest("[data-creator-sort]");
+    if (sortBtn) {
+      event.preventDefault();
+      creatorDetailState.sort = sortBtn.dataset.creatorSort || "new";
+      mainEl.querySelectorAll("[data-creator-sort]").forEach((btn) => {
+        btn.classList.toggle("active", btn === sortBtn);
+      });
+      renderCreatorSongList();
+      return;
+    }
+
+    const archiveToggleBtn = event.target.closest("[data-creator-archive-toggle]");
+    if (archiveToggleBtn) {
+      event.preventDefault();
+      creatorDetailState.archiveCollapsed = !creatorDetailState.archiveCollapsed;
+      syncArchiveCollapseUi(mainEl);
+      return;
+    }
+
+    const timelineToggleBtn = event.target.closest("[data-timeline-toggle-year]");
+    if (timelineToggleBtn) {
+      event.preventDefault();
+      const year = timelineToggleBtn.dataset.timelineToggleYear;
+      if (!year) return;
+      const expanded = timelineToggleBtn.dataset.expanded === "1";
+      const items = mainEl.querySelectorAll(`[data-timeline-extra="1"][data-timeline-year="${year}"]`);
+      items.forEach((item) => {
+        item.hidden = expanded;
+        if (expanded) item.setAttribute("hidden", "");
+        else item.removeAttribute("hidden");
+      });
+      timelineToggleBtn.dataset.expanded = expanded ? "0" : "1";
+      timelineToggleBtn.textContent = expanded
+        ? (timelineToggleBtn.dataset.labelMore || "さらに表示")
+        : (timelineToggleBtn.dataset.labelLess || "折りたたむ");
+      return;
+    }
+  };
+  mainEl.addEventListener("click", releaseDetailMainClickHandler);
+  renderCreatorSongList();
+  syncArchiveCollapseUi(mainEl);
 }
 
 // ----------------------------------------------------------------
@@ -1793,8 +2367,8 @@ function renderCallSection(song) {
   return `
     <section class="call-section" id="call">
       <div class="call-section-header">
-        <h2>📣 コール</h2>
-        <a class="call-permalink" href="?id=${song.id}#call" title="このコールへの直リンクをコピー">🔗 リンクをコピー</a>
+        <h2 class="section-heading-inline">${uiIcon("megaphone", "ui-icon--section")} コール</h2>
+        <a class="call-permalink" href="?id=${song.id}#call" title="このコールへの直リンクをコピー">${uiIcon("link", "ui-icon--xs")} リンクをコピー</a>
       </div>
       ${mixes}
     </section>
@@ -1816,8 +2390,6 @@ function renderDetailHTML(song) {
     return Math.floor(time / 86400000);
   };
   const sourceDay = toEpochDay(song.release?.date);
-  const relatedInitialLimit = 8;
-  const relatedStep = 6;
   const relatedSongs = songs
     .filter((s) => s.id !== song.id)
     .map((s) => {
@@ -1932,7 +2504,7 @@ function renderDetailHTML(song) {
 
       <header class="detail-header">
         <h1 class="detail-title">${song.title}</h1>
-        ${hasMix ? `<a class="detail-call-jump" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">📣 コールへジャンプ</a>` : ""}
+        ${hasMix ? `<a class="detail-call-jump" href="?id=${song.id}#call" data-song-id="${song.id}" data-hash="call">${uiIcon("megaphone", "ui-icon--xs")} コールへジャンプ</a>` : ""}
       </header>
 
       <section class="detail-basic">
@@ -1960,7 +2532,7 @@ function renderDetailHTML(song) {
       </section>
 
       <section class="detail-credits">
-        <h2>クレジット</h2>
+        <h2 class="section-heading-inline">クレジット</h2>
         <dl class="credits-list">
           <div>
             <dt>作詞</dt>
@@ -1979,7 +2551,7 @@ function renderDetailHTML(song) {
 
       ${hasMix ? renderCallSection(song) : `
         <section class="call-section call-section--empty" id="call">
-          <h2>📣 コール</h2>
+          <h2 class="section-heading-inline">${uiIcon("megaphone", "ui-icon--section")} コール</h2>
           <p class="call-empty-note">この曲のコール情報はまだ登録されていません。</p>
         </section>
       `}
@@ -1988,20 +2560,14 @@ function renderDetailHTML(song) {
         <section class="detail-related">
           <h2>同じクリエイターの曲</h2>
           <div class="related-grid">
-            ${relatedSongs.map((s, index) => `
-              <a class="related-card" href="?id=${s.id}" data-song-id="${s.id}" ${index >= relatedInitialLimit ? "hidden data-related-extra='1'" : ""}>
+            ${relatedSongs.map((s) => `
+              <a class="related-card related-card--group-${s.group || "all"}" href="?id=${s.id}" data-song-id="${s.id}">
                 <span class="group-badge ${s.group}">${groupLabels[s.group]}</span>
                 <span class="related-title">${s.title}</span>
-                ${s.hasCall ? `<span class="related-mix-badge">📣</span>` : ""}
+                ${s.hasCall ? `<span class="related-mix-badge">${uiIcon("megaphone", "ui-icon--xxs")}</span>` : ""}
               </a>
             `).join("")}
           </div>
-          ${relatedSongs.length > relatedInitialLimit ? `
-            <div class="related-controls">
-              <button type="button" class="back-link back-link--mini" data-related-more data-related-step="${relatedStep}">さらに表示</button>
-              <button type="button" class="back-link back-link--mini" data-related-all>すべて表示</button>
-            </div>
-          ` : ""}
         </section>
       ` : ""}
 
@@ -2011,10 +2577,10 @@ function renderDetailHTML(song) {
           <p class="detail-release-name">${song.release.title}</p>
           <div class="related-grid">
             ${samRelease.map((s) => `
-              <a class="related-card" href="?id=${s.id}" data-song-id="${s.id}">
+              <a class="related-card related-card--group-${s.group || "all"}" href="?id=${s.id}" data-song-id="${s.id}">
                 <span class="group-badge ${s.group}">${groupLabels[s.group]}</span>
                 <span class="related-title">${s.title}</span>
-                ${s.hasCall ? `<span class="related-mix-badge">📣</span>` : ""}
+                ${s.hasCall ? `<span class="related-mix-badge">${uiIcon("megaphone", "ui-icon--xxs")}</span>` : ""}
               </a>
             `).join("")}
           </div>
@@ -2111,11 +2677,35 @@ function bindDetailEvents(currentSong) {
       return;
     }
 
+    // data-song-id が無いリンクでも ?id= を拾って遷移
+    const hrefSongLink = event.target.closest("a[href*='?id=']");
+    if (hrefSongLink) {
+      event.preventDefault();
+      const targetUrl = new URL(hrefSongLink.getAttribute("href"), location.href);
+      const songId = targetUrl.searchParams.get("id");
+      if (songId) {
+        if (targetUrl.hash === "#call") navigateWithHash(songId, "call");
+        else navigate(songId);
+        return;
+      }
+    }
+
     const releaseLink = event.target.closest("[data-release-key]");
     if (releaseLink) {
       event.preventDefault();
       pushInternalRoute(`?release=${releaseLink.dataset.releaseKey}`, { release: releaseLink.dataset.releaseKey });
       return;
+    }
+
+    // data-release-key が無いリンクでも ?release= を拾って遷移
+    const hrefReleaseLink = event.target.closest("a[href*='?release=']");
+    if (hrefReleaseLink) {
+      event.preventDefault();
+      const releaseKey = new URL(hrefReleaseLink.getAttribute("href"), location.href).searchParams.get("release");
+      if (releaseKey) {
+        pushInternalRoute(`?release=${releaseKey}`, { release: releaseKey });
+        return;
+      }
     }
 
     // 一覧に戻る
@@ -2138,17 +2728,19 @@ function bindDetailEvents(currentSong) {
       event.preventDefault();
       const url = new URL(permalinkBtn.href);
       navigator.clipboard.writeText(url.href).then(() => {
-        permalinkBtn.textContent = "✅ コピーしました";
-        setTimeout(() => (permalinkBtn.textContent = "🔗 リンクをコピー"), 2000);
+        permalinkBtn.innerHTML = `${uiIcon("spark", "ui-icon--xs")} コピーしました`;
+        setTimeout(() => (permalinkBtn.innerHTML = `${uiIcon("link", "ui-icon--xs")} リンクをコピー`), 2000);
       });
       return;
     }
 
-    // クリエイターパネル（詳細ビュー内）
+    // クリエイター詳細ページ（詳細ビュー内）
     const creatorDetailLink = event.target.closest("[data-creator-name-detail]");
     if (creatorDetailLink) {
       event.preventDefault();
-      openCreatorPanel(creatorDetailLink.dataset.creatorNameDetail);
+      const name = creatorDetailLink.dataset.creatorNameDetail;
+      const cid = creatorId(name);
+      pushInternalRoute(`?creator=${encodeURIComponent(cid)}`, { creator: cid });
       return;
     }
 
@@ -2158,34 +2750,6 @@ function bindDetailEvents(currentSong) {
       return;
     }
 
-    const relatedMoreBtn = event.target.closest("[data-related-more]");
-    if (relatedMoreBtn) {
-      event.preventDefault();
-      const hiddenCards = [...document.querySelectorAll("[data-related-extra][hidden]")];
-      const step = Math.max(1, Number(relatedMoreBtn.dataset.relatedStep || "6"));
-      hiddenCards.slice(0, step).forEach((card) => {
-        card.hidden = false;
-      });
-      const remain = hiddenCards.length - Math.min(step, hiddenCards.length);
-      if (remain <= 0) {
-        relatedMoreBtn.hidden = true;
-        const allBtn = document.querySelector("[data-related-all]");
-        if (allBtn) allBtn.hidden = true;
-      }
-      return;
-    }
-
-    const relatedAllBtn = event.target.closest("[data-related-all]");
-    if (relatedAllBtn) {
-      event.preventDefault();
-      document.querySelectorAll("[data-related-extra][hidden]").forEach((card) => {
-        card.hidden = false;
-      });
-      relatedAllBtn.hidden = true;
-      const moreBtn = document.querySelector("[data-related-more]");
-      if (moreBtn) moreBtn.hidden = true;
-      return;
-    }
   };
   mainEl.addEventListener("click", detailMainClickHandler);
 }
@@ -2208,9 +2772,9 @@ function openCreatorPanel(name) {
   document.querySelector("#creatorPanelSongs").innerHTML = related
     .map(
       (s) => `
-      <article class="creator-song-item">
+      <article class="creator-song-item creator-song-item--group-${s.group || "all"}">
         <div class="creator-song-title">
-          <a class="creator-song-link" href="?id=${s.id}" data-song-id="${s.id}">${s.title}</a>
+          <a class="creator-song-link creator-song-link--${s.group || "all"}" href="?id=${s.id}" data-song-id="${s.id}">${s.title}</a>
           <span class="group-badge ${s.group}">${groupLabels[s.group]}</span>
         </div>
         <div class="creator-role-row">
@@ -2478,6 +3042,7 @@ function bindFloatingSearch() {
       return;
     }
     if (event.key === "Enter") {
+      if (isImeComposing(event)) return;
       event.preventDefault();
       const items = getSearchModeItems();
       if (searchModeActiveIndex >= 0 && items[searchModeActiveIndex]) {
