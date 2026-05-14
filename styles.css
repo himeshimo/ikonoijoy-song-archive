@@ -2525,12 +2525,15 @@ a.mix-tag:hover {
 .call-section--empty h2 { color: var(--ink-3); margin-bottom: 8px; }
 
 .call-permalink {
+  display: inline-flex;
+  align-items: center;
   font-size: 12px;
   color: var(--ink-3);
   text-decoration: none;
   padding: 4px 10px;
   border: 1px solid var(--border);
   border-radius: 20px;
+  white-space: nowrap;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
 }
@@ -2790,6 +2793,37 @@ a.mix-tag:hover {
   .group-intro-bottom { padding-top: 2px; gap: 5px; }
   .stats { grid-template-columns: 1fr; }
   .section-head { flex-direction: column; align-items: flex-start; }
+  .creator-detail-head,
+  .creator-timeline-year-head,
+  .release-group-head,
+  .call-section-header,
+  .section-header-with-count,
+  .related-section-header {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    flex-wrap: nowrap !important;
+  }
+  .creator-detail-head h2,
+  .creator-timeline-year-head h3,
+  .release-group-head h3,
+  .call-section-header h2,
+  .section-header-with-count h2,
+  .related-section-header h2 {
+    min-width: 0;
+  }
+  .creator-detail-count,
+  .release-group-head p,
+  .creator-timeline-year-head .tag,
+  .section-count,
+  .related-count {
+    flex: 0 0 auto;
+    width: auto !important;
+    white-space: nowrap;
+    margin-left: auto;
+    text-align: right;
+  }
   .song-tools { align-items: flex-start; }
   .song-release summary { grid-template-columns: auto minmax(0,1fr); }
   .song-release summary small { grid-column: 2; }
@@ -2816,6 +2850,15 @@ a.mix-tag:hover {
     font-size: 22px;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.42);
   }
+}
+
+/* call系アイコンは少しだけ視認性を上げる（PC/スマホ共通） */
+.call-direct-link .ui-icon,
+.detail-call-jump .ui-icon,
+a.mix-tag .ui-icon,
+.related-mix-badge .ui-icon {
+  width: 15px;
+  height: 15px;
 }
 
 /* ================================================================
@@ -4003,12 +4046,15 @@ body[data-accent="joy"] {
 
 @media (max-width: 900px) {
   .creator-detail-view .creator-detail-head {
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 8px 12px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 12px;
   }
   .creator-detail-view .creator-detail-count {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
     text-align: right;
   }
 }

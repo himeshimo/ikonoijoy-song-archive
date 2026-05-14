@@ -2368,7 +2368,7 @@ function renderCallSection(song) {
     <section class="call-section" id="call">
       <div class="call-section-header">
         <h2 class="section-heading-inline">${uiIcon("megaphone", "ui-icon--section")} コール</h2>
-        <a class="call-permalink" href="?id=${song.id}#call" title="このコールへの直リンクをコピー">${uiIcon("link", "ui-icon--xs")} リンクをコピー</a>
+        <a class="call-permalink" href="?id=${song.id}#call" title="このコールへの直リンクをコピー">リンクをコピー</a>
       </div>
       ${mixes}
     </section>
@@ -2728,8 +2728,10 @@ function bindDetailEvents(currentSong) {
       event.preventDefault();
       const url = new URL(permalinkBtn.href);
       navigator.clipboard.writeText(url.href).then(() => {
-        permalinkBtn.innerHTML = `${uiIcon("spark", "ui-icon--xs")} コピーしました`;
-        setTimeout(() => (permalinkBtn.innerHTML = `${uiIcon("link", "ui-icon--xs")} リンクをコピー`), 2000);
+        permalinkBtn.textContent = "コピーしました";
+        setTimeout(() => {
+          permalinkBtn.textContent = "リンクをコピー";
+        }, 2000);
       });
       return;
     }
